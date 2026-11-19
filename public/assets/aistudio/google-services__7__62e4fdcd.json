@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "721494882410",
+    "project_id": "dogwood-program-zw2pc",
+    "storage_bucket": "dogwood-program-zw2pc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721494882410:android:f01b9d59a4d6b28c947213",
+        "android_client_info": {
+          "package_name": "com.alhussam.grocery"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "721494882410-0narv3vrlthr0n0hijquapk0rse0vvun.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alhussam.grocery",
+            "certificate_hash": "966330bbed0ccbd8175376fdf57c7609548ce7ec"
+          }
+        },
+        {
+          "client_id": "721494882410-v77p8bf1j61p7gcs9oraaj68iq44prc7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDs2P8tN0UG4U3tPH5DU5AWtjPPFlOkLwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "721494882410-v77p8bf1j61p7gcs9oraaj68iq44prc7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

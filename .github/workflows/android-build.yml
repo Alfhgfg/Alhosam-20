@@ -1,0 +1,233 @@
+name: Android Release Build (APK & AAB)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Build APK & AAB via Gradle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json', 'package.json', 'bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+
+      - name: Install Android SDK 36 & Build-Tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0"
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      - name: TypeScript check & Vite web build
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run lint
+          npm run build
+
+      - name: Sync Capacitor Android project
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx cap sync android
+          rm -rf android/app/src/main/assets/public/downloads
+          rm -rf android/app/src/main/assets/public/assets/aistudio
+
+      - name: Prepare Android Gradle & Google Services
+        shell: bash
+        env:
+          GS_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          GS_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          chmod +x android/gradlew
+          rm -f android/local.properties
+
+          if [ -n "$GS_JSON" ]; then
+            printf '%s\n' "$GS_JSON" > android/app/google-services.json
+          elif [ -n "$GS_JSON_B64" ]; then
+            if printf '%s' "$GS_JSON_B64" | grep -q '"project_info"'; then
+              printf '%s\n' "$GS_JSON_B64" > android/app/google-services.json
+            else
+              printf '%s' "$GS_JSON_B64" | tr -d '\r\n ' | base64 --decode > android/app/google-services.json
+            fi
+          fi
+
+          if [ ! -s android/app/google-services.json ]; then
+            FALLBACK_GS=$(ls -t public/assets/aistudio/google-services*.json 2>/dev/null | head -n 1 || true)
+            if [ -n "$FALLBACK_GS" ] && [ -s "$FALLBACK_GS" ]; then
+              cp "$FALLBACK_GS" android/app/google-services.json
+              echo "Restored android/app/google-services.json from $FALLBACK_GS."
+            fi
+          fi
+
+          if [ ! -s android/app/google-services.json ]; then
+            echo "::error::Missing android/app/google-services.json. Commit android/app/google-services.json to the repository or set the GOOGLE_SERVICES_JSON_BASE64 (or GOOGLE_SERVICES_JSON) GitHub Actions secret."
+            exit 1
+          fi
+
+          node -e '
+            const fs = require("fs");
+            const gs = JSON.parse(fs.readFileSync("android/app/google-services.json", "utf8"));
+            const pkg = gs?.client?.[0]?.client_info?.android_client_info?.package_name;
+            const appId = gs?.client?.[0]?.client_info?.mobilesdk_app_id;
+            const proj = gs?.project_info?.project_id;
+            if (!proj || !appId || pkg !== "com.alhussam.grocery") {
+              console.error("Invalid google-services.json:", { proj, appId, pkg });
+              process.exit(1);
+            }
+            console.log("Verified google-services.json:", { proj, appId, pkg });
+          '
+
+      - name: Configure Release Signing (without exposing secrets)
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "$KEYSTORE_B64" ]; then
+            if [ -z "$KEYSTORE_PASS" ] || [ -z "$KEYSTORE_ALIAS" ]; then
+              echo "::error::ANDROID_KEYSTORE_BASE64 is set, but ANDROID_KEYSTORE_PASSWORD or ANDROID_KEYSTORE_ALIAS is missing."
+              exit 1
+            fi
+            KEYSTORE_FILE="${{ runner.temp }}/release.keystore"
+            printf '%s' "$KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > "$KEYSTORE_FILE"
+            echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_FILE" >> "$GITHUB_ENV"
+            echo "ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PASS" >> "$GITHUB_ENV"
+            echo "ANDROID_KEYSTORE_ALIAS=$KEYSTORE_ALIAS" >> "$GITHUB_ENV"
+            echo "ANDROID_KEYSTORE_KEY_PASSWORD=${KEY_PASS:-$KEYSTORE_PASS}" >> "$GITHUB_ENV"
+            echo "Configured release signing from GitHub Secrets."
+          elif [ -f android/keystore.properties ] && [ -f android/alhussam-release.keystore ]; then
+            echo "Configured release signing from android/keystore.properties."
+          else
+            echo "::error::No release keystore found. Configure ANDROID_KEYSTORE_* secrets or provide android/keystore.properties."
+            exit 1
+          fi
+
+      - name: Build APK & AAB via Gradle
+        shell: bash
+        working-directory: android
+        run: |
+          set -o pipefail
+          ./gradlew assembleRelease bundleRelease --no-daemon --max-workers=1 --stacktrace 2>&1 | tee "${{ runner.temp }}/gradle-build.log"
+
+      - name: Diagnose Gradle failure on error
+        if: failure()
+        shell: bash
+        run: |
+          if [ -f "${{ runner.temp }}/gradle-build.log" ]; then
+            echo "=== Last 120 lines of Gradle build log ==="
+            tail -n 120 "${{ runner.temp }}/gradle-build.log"
+          fi
+
+      - name: Verify APK, AAB & APK Signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-artifacts
+
+          APK_FILE=$(find android/app/build/outputs/apk/release -maxdepth 2 -type f -name "*.apk" ! -name "*unsigned*" | head -n 1)
+          AAB_FILE=$(find android/app/build/outputs/bundle/release -maxdepth 2 -type f -name "*.aab" | head -n 1)
+
+          if [ -z "$APK_FILE" ] || [ ! -s "$APK_FILE" ]; then
+            echo "::error::Release APK was not generated or is empty."
+            exit 1
+          fi
+
+          if [ -z "$AAB_FILE" ] || [ ! -s "$AAB_FILE" ]; then
+            echo "::error::Release AAB was not generated or is empty."
+            exit 1
+          fi
+
+          SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$SDK_DIR" ] || [ ! -d "$SDK_DIR/build-tools" ]; then
+            echo "::error::Android SDK build-tools directory not found (ANDROID_HOME/ANDROID_SDK_ROOT)."
+            exit 1
+          fi
+
+          APKSIGNER=$(find "$SDK_DIR/build-tools" -name apksigner | sort -V | tail -n 1)
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner not found in $SDK_DIR/build-tools."
+            exit 1
+          fi
+
+          "$APKSIGNER" verify --verbose --print-certs "$APK_FILE"
+          jarsigner -verify "$AAB_FILE"
+
+          cp "$APK_FILE" release-artifacts/app-release.apk
+          cp "$AAB_FILE" release-artifacts/app-release.aab
+          ls -lh release-artifacts/
+
+      - name: Upload Gradle failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-failure-log
+          path: ${{ runner.temp }}/gradle-build.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload APK & AAB Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: alhussam-grocery-android-release
+          path: |
+            release-artifacts/app-release.apk
+            release-artifacts/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
