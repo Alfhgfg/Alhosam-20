@@ -31,6 +31,16 @@ import type {
   Product,
   Supplier,
 } from '../src/types';
+import {
+  buildBarcodeSvgMarkup,
+  computeEan13CheckDigit,
+  encodeBarcode,
+  findBarcodeConflict,
+  generateUniqueProductBarcode,
+  isValidBarcodeFormat,
+  isValidEan13,
+  normalizeBarcode,
+} from '../src/utils/barcode';
 import { roundMoney } from '../src/utils/format';
 
 const ACTOR = {
@@ -191,15 +201,20 @@ function applyOpToCloud(cloud: CloudLedger, op: PendingOperation): { referenceId
   if (op.type === 'product_create') {
     const productId = String(p.productId);
     const code = String(p.code);
+    const barcode = typeof p.barcode === 'string' ? normalizeBarcode(p.barcode) : undefined;
     for (const existing of cloud.products.values()) {
       if (existing.code === code) {
         throw new Error(`كود الصنف "${code}" مستخدم بالفعل لصنف آخر.`);
+      }
+      if (barcode && (existing.barcode === barcode || existing.code === barcode)) {
+        throw new Error(`الباركود "${barcode}" مستخدم بالفعل لصنف آخر.`);
       }
     }
     const stock = Number(p.stock || 0);
     cloud.products.set(productId, {
       id: productId,
       code,
+      barcode,
       name: String(p.name),
       category: String(p.category || 'عام'),
       unit: String(p.unit || 'حبة'),
@@ -227,6 +242,10 @@ function applyOpToCloud(cloud: CloudLedger, op: PendingOperation): { referenceId
     }
     cloud.products.set(productId, {
       ...cur,
+      barcode:
+        typeof p.barcode === 'string' && normalizeBarcode(p.barcode)
+          ? normalizeBarcode(p.barcode)
+          : cur.barcode,
       name: String(p.name),
       costPrice: Number(p.costPrice),
       sellPrice: Number(p.sellPrice),
@@ -521,9 +540,10 @@ async function runTests() {
     summary: 'إضافة حليب طازج',
     localTempRef: 'HS-L0001',
     actor: ACTOR,
-    payload: {
+      payload: {
       productId: 'prod_milk',
       code: 'HS-L0001',
+      barcode: '٢٠٠٠٠٠٠٠١٠٢٠٦',
       name: 'حليب طازج 1 لتر',
       category: 'ألبان',
       unit: 'حبة',
@@ -738,6 +758,7 @@ async function runTests() {
   assert.equal(projectedBeforeRestart.products.find((p) => p.id === 'prod_rice')?.stock, 19);
   assert.equal(projectedBeforeRestart.products.find((p) => p.id === 'prod_oil')?.stock, 18);
   assert.equal(projectedBeforeRestart.products.find((p) => p.id === 'prod_milk')?.stock, 8);
+  assert.equal(projectedBeforeRestart.products.find((p) => p.id === 'prod_milk')?.barcode, '2000000010206');
   assert.equal(projectedBeforeRestart.products.find((p) => p.id === 'prod_oil')?.costPrice, 750);
   // Customer check:
   assert.equal(projectedBeforeRestart.customers.find((c) => c.id === 'cust_ali')?.balanceDue, 400);
@@ -976,7 +997,46 @@ async function runTests() {
   assert.equal(cloud.customers.get('cust_mohammed')!.balanceDue, 0);
   console.log('[PASS] 11-14. Multi-device delta sync, stocktake conflict/resolution, non-blocking error isolation & invoice cancellation verified');
 
-  console.log('=== ALL 14 PRACTICAL SCENARIOS PASSED PERFECTLY ===');
+  // 6. Integrated Barcode System Verification
+  assert.equal(normalizeBarcode('  \u200E٦٢٩١٠٤١٥٠٠٢١٣\u200F '), '6291041500213');
+  assert.equal(normalizeBarcode(' hs-1001 '), 'HS-1001');
+  assert.equal(isValidBarcodeFormat('6291041500213'), true);
+  assert.equal(isValidBarcodeFormat('HS-1001'), true);
+  assert.equal(isValidBarcodeFormat('باركود'), false);
+
+  assert.equal(computeEan13CheckDigit('629104150021'), '3');
+  assert.equal(isValidEan13('6291041500213'), true);
+  assert.equal(isValidEan13('6291041500214'), false);
+
+  const generated1 = generateUniqueProductBarcode(baseline.products, 1003);
+  assert.equal(isValidEan13(generated1), true);
+  const augmentedProducts: Product[] = [
+    ...baseline.products,
+    { ...baseline.products[0], id: 'prod_gen1', code: 'HS-1003', barcode: generated1 },
+  ];
+  const generated2 = generateUniqueProductBarcode(augmentedProducts, 1003);
+  assert.notEqual(generated2, generated1);
+  assert.equal(isValidEan13(generated2), true);
+
+  assert.equal(findBarcodeConflict('629100000001', baseline.products)?.id, 'prod_rice');
+  assert.equal(findBarcodeConflict('629100000001', baseline.products, 'prod_rice'), null);
+  assert.equal(findBarcodeConflict('hs-1002', baseline.products)?.id, 'prod_oil');
+
+  const encEan = encodeBarcode('6291041500213');
+  assert.equal(encEan.format, 'EAN-13');
+  assert.equal(encEan.bits.length, 95);
+  assert.equal(encEan.bits.slice(0, 3), '101');
+  assert.equal(encEan.bits.slice(45, 50), '01010');
+  assert.equal(encEan.bits.slice(92, 95), '101');
+
+  const enc128 = encodeBarcode('HS-1001');
+  assert.equal(enc128.format, 'CODE-128');
+  assert.ok(enc128.bits.length > 60);
+  const svg = buildBarcodeSvgMarkup('6291041500213');
+  assert.ok(svg.startsWith('<svg ') && svg.includes('6291041500213'));
+  console.log('[PASS] 15. Barcode normalization, EAN-13/Code-128 encoding, uniqueness & SVG rendering verified');
+
+  console.log('=== ALL 15 PRACTICAL SCENARIOS PASSED PERFECTLY ===');
 }
 
 runTests().catch((err) => {

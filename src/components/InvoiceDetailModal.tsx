@@ -31,6 +31,7 @@ import {
   saveLocalInvoicePreferences,
   type InvoicePreferences,
 } from '../utils/invoicePrint';
+import { printCurrentView } from '../utils/print';
 import { StoreBrandLogo } from './StoreBrandLogo';
 import { BackButton } from './UnifiedBackHeader';
 
@@ -187,7 +188,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
   };
 
   const handlePrint = () => {
-    window.print();
+    printCurrentView(`فاتورة بيع - ${sale.invoiceNumber}`);
   };
 
   const handleCopyShare = async () => {

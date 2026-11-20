@@ -7,12 +7,14 @@ import {
   useSectionDirtyGuard,
 } from '../contexts/NavigationContext';
 import { useStoreData } from '../contexts/StoreDataContext';
+import { useHardwareBarcodeScanner } from '../hooks/useHardwareBarcodeScanner';
 import {
   createSupplier,
   executePurchase,
   recordVoucher,
 } from '../services/accountingService';
 import type { PaymentMethod, Product, PurchaseInvoice, Supplier } from '../types';
+import { normalizeBarcode } from '../utils/barcode';
 import {
   formatDateTime,
   formatMoney,
@@ -70,6 +72,7 @@ export const SuppliersPurchasesView: React.FC = () => {
   const [payNotes, setPayNotes] = useState('');
   const [paying, setPaying] = useState(false);
   const initialPayAmtRef = useRef('');
+  const codeSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Supplier statement & purchase detail modals
   const [stmtSupp, setStmtSupp] = useState<Supplier | null>(null);
@@ -170,15 +173,48 @@ export const SuppliersPurchasesView: React.FC = () => {
     });
   };
 
+  useHardwareBarcodeScanner({
+    enabled:
+      activeSection === 'suppliers' &&
+      tab === 'new_purchase' &&
+      !cameraOpen &&
+      !showAddSupp &&
+      !paySupp &&
+      !liveStmtSupp &&
+      !selectedPurchase,
+    skipElementRef: codeSearchInputRef,
+    onScan: (scanned) => {
+      const clean = normalizeBarcode(scanned);
+      if (!clean) return;
+      const found = productByCode.get(clean);
+      if (!found) {
+        setFeedback({
+          type: 'err',
+          text: `لم يتم العثور على صنف بالباركود أو الكود "${clean}".`,
+        });
+        return;
+      }
+      addProductLine(found);
+      setFeedback({
+        type: 'ok',
+        text: `تمت إضافة "${found.name}" (${found.code}) إلى فاتورة الشراء.`,
+      });
+    },
+  });
+
   const handleCodeAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = codeSearch.trim().toUpperCase();
-    if (!clean) return;
+    const rawTrim = codeSearch.trim();
+    const clean = normalizeBarcode(rawTrim);
+    if (!rawTrim) return;
     const found =
-      productByCode.get(clean) ||
-      products.find((p) => p.name.toLowerCase().includes(clean.toLowerCase()));
+      (clean ? productByCode.get(clean) : undefined) ||
+      products.find((p) => p.name.toLowerCase().includes(rawTrim.toLowerCase()));
     if (!found) {
-      setFeedback({ type: 'err', text: `لم يتم العثور على صنف مطابق لـ "${clean}".` });
+      setFeedback({
+        type: 'err',
+        text: `لم يتم العثور على صنف مطابق لـ "${clean || rawTrim}".`,
+      });
       return;
     }
     addProductLine(found);
@@ -379,10 +415,11 @@ export const SuppliersPurchasesView: React.FC = () => {
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
+                  ref={codeSearchInputRef}
                   type="text"
                   value={codeSearch}
                   onChange={(e) => setCodeSearch(e.target.value)}
-                  placeholder="أدخل كود الصنف أو اسمه لإضافته لفاتورة الشراء..."
+                  placeholder="امسح الباركود أو أدخل كود الصنف أو اسمه..."
                   className="w-full pr-9 pl-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
@@ -440,6 +477,7 @@ export const SuppliersPurchasesView: React.FC = () => {
                           <div className="font-medium text-slate-900">{line.product.name}</div>
                           <div className="text-xs font-mono-num text-slate-500">
                             {line.product.code}
+                            {line.product.barcode ? ` · ${line.product.barcode}` : ''}
                           </div>
                         </td>
                         <td className="py-2.5 px-3 text-center">
@@ -1061,7 +1099,7 @@ export const SuppliersPurchasesView: React.FC = () => {
         defaultContinuous
         title="مسح باركود الأصناف لفاتورة الشراء"
         onDetected={(rawCode) => {
-          const clean = rawCode.trim().toUpperCase();
+          const clean = normalizeBarcode(rawCode);
           if (!clean) {
             return { ok: false, message: 'رمز الباركود غير صالح.' };
           }

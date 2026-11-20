@@ -18,12 +18,40 @@ import {
   useSectionDirtyGuard,
 } from '../contexts/NavigationContext';
 import { useStoreData } from '../contexts/StoreDataContext';
+import { useHardwareBarcodeScanner } from '../hooks/useHardwareBarcodeScanner';
 import { createCustomer, executeSale } from '../services/accountingService';
 import type { Customer, PaymentMethod, Product, SaleInvoice } from '../types';
+import { normalizeBarcode } from '../utils/barcode';
 import { formatMoney, formatNumber, generateDocId, roundMoney } from '../utils/format';
 import { CameraBarcodeModal } from './CameraBarcodeModal';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
 import { ModalSubPageHeader } from './UnifiedBackHeader';
+
+function playPosScanBeep(success: boolean) {
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = success ? 'sine' : 'triangle';
+    osc.frequency.setValueAtTime(success ? 1040 : 320, ctx.currentTime);
+    gain.gain.setValueAtTime(0.07, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.11);
+    window.setTimeout(() => {
+      ctx.close().catch(() => {});
+    }, 200);
+  } catch {
+    // Ignore audio context restrictions
+  }
+}
 
 interface CartLine {
   product: Product;
@@ -76,10 +104,6 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
   const cartRef = useRef<CartLine[]>(cart);
   cartRef.current = cart;
 
-  const scanBufferRef = useRef('');
-  const lastScanKeyTimeRef = useRef(0);
-  const scanResetTimerRef = useRef<number | null>(null);
-
   const canDiscount = isAdmin || hasPermission('canDiscount');
   const canEditPrice = isAdmin || hasPermission('canManageProducts');
 
@@ -131,16 +155,20 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
+    const qNorm = normalizeBarcode(searchQuery);
     return products.filter((p) => {
       if (!p.isActive) return false;
       if (selectedCategory !== 'الكل' && p.category !== selectedCategory) {
         return false;
       }
       if (!q) return true;
+      const pBar = normalizeBarcode(p.barcode);
+      const pCode = normalizeBarcode(p.code);
       return (
         p.name.toLowerCase().includes(q) ||
         p.code.toLowerCase().includes(q) ||
-        (p.barcode && p.barcode.toLowerCase().includes(q))
+        (p.barcode && p.barcode.toLowerCase().includes(q)) ||
+        (qNorm.length > 0 && (pBar.includes(qNorm) || pCode.includes(qNorm)))
       );
     });
   }, [products, searchQuery, selectedCategory]);
@@ -178,17 +206,21 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
   };
 
   const handleScanCode = (rawCode: string, source: 'manual' | 'scanner') => {
-    const clean = rawCode.trim().toUpperCase();
+    const clean = normalizeBarcode(rawCode);
     if (!clean) return;
     const found = productByCode.get(clean);
     if (!found) {
       setScanToast(null);
       setErrorMsg(`لم يتم العثور على صنف بالكود أو الباركود "${clean}".`);
+      if (source === 'scanner') playPosScanBeep(false);
       return;
     }
     const added = addProductToCart(found);
     if (added && source === 'scanner') {
+      playPosScanBeep(true);
       setScanToast(`تمت إضافة "${found.name}" (${found.code}) للسلة`);
+    } else if (!added && source === 'scanner') {
+      playPosScanBeep(false);
     }
   };
 
@@ -199,85 +231,23 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
     codeFieldRef.current?.focus();
   };
 
-  const handleScanCodeRef = useRef(handleScanCode);
-  handleScanCodeRef.current = handleScanCode;
-
   useEffect(() => {
     if (!scanToast) return;
     const timer = window.setTimeout(() => setScanToast(null), 2500);
     return () => window.clearTimeout(timer);
   }, [scanToast]);
 
-  useEffect(() => {
-    if (!isActive || !scannerEnabled) return;
-
-    const clearBuffer = () => {
-      scanBufferRef.current = '';
-      if (scanResetTimerRef.current !== null) {
-        window.clearTimeout(scanResetTimerRef.current);
-        scanResetTimerRef.current = null;
-      }
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (showNewCustomer || completedSale || submitting || cameraOpen) return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-      const target = e.target as HTMLElement | null;
-      if (target) {
-        if (target === codeFieldRef.current) {
-          // Handled directly by the barcode form input
-          return;
-        }
-        const tag = target.tagName;
-        if (
-          tag === 'INPUT' ||
-          tag === 'TEXTAREA' ||
-          tag === 'SELECT' ||
-          target.isContentEditable
-        ) {
-          return;
-        }
-      }
-
-      const now = Date.now();
-
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        const scanned = scanBufferRef.current.trim();
-        if (scanned.length >= 2 && now - lastScanKeyTimeRef.current <= 200) {
-          e.preventDefault();
-          e.stopPropagation();
-          clearBuffer();
-          handleScanCodeRef.current(scanned, 'scanner');
-          return;
-        }
-        clearBuffer();
-        return;
-      }
-
-      if (e.key.length === 1) {
-        if (now - lastScanKeyTimeRef.current > 180) {
-          scanBufferRef.current = '';
-        }
-        scanBufferRef.current += e.key;
-        lastScanKeyTimeRef.current = now;
-
-        if (scanResetTimerRef.current !== null) {
-          window.clearTimeout(scanResetTimerRef.current);
-        }
-        scanResetTimerRef.current = window.setTimeout(() => {
-          scanBufferRef.current = '';
-          scanResetTimerRef.current = null;
-        }, 250);
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown, true);
-      clearBuffer();
-    };
-  }, [isActive, scannerEnabled, showNewCustomer, completedSale, submitting, cameraOpen]);
+  useHardwareBarcodeScanner({
+    enabled:
+      isActive &&
+      scannerEnabled &&
+      !showNewCustomer &&
+      !completedSale &&
+      !submitting &&
+      !cameraOpen,
+    skipElementRef: codeFieldRef,
+    onScan: (scanned) => handleScanCode(scanned, 'scanner'),
+  });
 
   const updateCartQty = (productId: string, nextQty: number) => {
     setErrorMsg(null);
@@ -571,8 +541,9 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                       }`}
                     >
                       <div className="space-y-1">
-                        <div className="text-[11px] font-mono-num text-slate-500">
+                        <div className="text-[11px] font-mono-num text-slate-500 truncate">
                           {product.code}
+                          {product.barcode ? ` · ${product.barcode}` : ''}
                         </div>
                         <div className="text-sm font-semibold text-slate-900 line-clamp-2">
                           {product.name}
@@ -670,7 +641,9 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                           {line.product.name}
                         </div>
                         <div className="text-[11px] font-mono-num text-slate-500">
-                          {line.product.code} · {line.product.unit}
+                          {line.product.code}
+                          {line.product.barcode ? ` · ${line.product.barcode}` : ''} ·{' '}
+                          {line.product.unit}
                         </div>
                       </div>
                       <button
@@ -925,7 +898,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
         defaultContinuous
         title="مسح باركود الأصناف بالكاميرا"
         onDetected={(rawCode) => {
-          const clean = rawCode.trim().toUpperCase();
+          const clean = normalizeBarcode(rawCode);
           if (!clean) {
             return { ok: false, message: 'رمز الباركود غير صالح.' };
           }

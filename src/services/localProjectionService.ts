@@ -17,6 +17,7 @@ import type {
   Supplier,
   Voucher,
 } from '../types';
+import { normalizeBarcode } from '../utils/barcode';
 import { roundMoney, truncateText } from '../utils/format';
 import { makeLocalTimestamp } from './localDbService';
 
@@ -106,7 +107,7 @@ export function projectStoreWithPendingOps(
       const newProd: Product = {
         id: productId,
         code,
-        barcode: typeof p.barcode === 'string' && p.barcode.trim() ? p.barcode.trim() : undefined,
+        barcode: normalizeBarcode(typeof p.barcode === 'string' ? p.barcode : '') || undefined,
         name: String(p.name || 'صنف جديد'),
         category: String(p.category || 'عام'),
         description:
@@ -162,7 +163,7 @@ export function projectStoreWithPendingOps(
       target.minStock = Math.max(0, Number(p.minStock ?? target.minStock));
       if (typeof p.isActive === 'boolean') target.isActive = p.isActive;
       target.barcode =
-        typeof p.barcode === 'string' && p.barcode.trim() ? p.barcode.trim() : undefined;
+        normalizeBarcode(typeof p.barcode === 'string' ? p.barcode : '') || undefined;
       target.description =
         typeof p.description === 'string' && p.description.trim()
           ? p.description.trim()

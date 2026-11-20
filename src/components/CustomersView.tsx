@@ -21,6 +21,7 @@ import {
   formatMoney,
   paymentMethodLabel,
 } from '../utils/format';
+import { printCurrentView } from '../utils/print';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
 import { ModalSubPageHeader } from './UnifiedBackHeader';
 
@@ -220,8 +221,9 @@ export const CustomersView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <>
+      <div className={liveSelectedCustomer ? 'space-y-5 no-print' : 'space-y-5'}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">إدارة العملاء وكشوف الحساب</h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -370,10 +372,11 @@ export const CustomersView: React.FC = () => {
           </div>
         )}
       </div>
+      </div>
 
       {/* Customer Statement Modal */}
       {liveSelectedCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto print:static print:inset-auto print:bg-white print:p-0 print:block">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-3xl overflow-hidden print-container shadow-xl">
             <ModalSubPageHeader
               title={`كشف حساب العميل: ${liveSelectedCustomer.name}`}
@@ -384,7 +387,9 @@ export const CustomersView: React.FC = () => {
               actions={
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={() =>
+                    printCurrentView(`كشف حساب - ${liveSelectedCustomer.name}`)
+                  }
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
@@ -645,6 +650,6 @@ export const CustomersView: React.FC = () => {
         onClose={() => setSelectedSale(null)}
         showProfit={isAdmin}
       />
-    </div>
+    </>
   );
 };

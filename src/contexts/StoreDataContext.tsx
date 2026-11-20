@@ -43,6 +43,7 @@ import {
   updateSyncMeta,
 } from '../services/offlineQueueService';
 import { useAuth } from './AuthContext';
+import { normalizeBarcode } from '../utils/barcode';
 import type {
   AuditLog,
   CashTransaction,
@@ -1087,9 +1088,16 @@ export const StoreDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const productByCode = useMemo(() => {
     const map = new Map<string, Product>();
     for (const p of projectedData.products) {
-      map.set(p.code.toUpperCase(), p);
-      if (p.barcode) {
-        map.set(p.barcode.trim().toUpperCase(), p);
+      const normCode = normalizeBarcode(p.code);
+      if (normCode) {
+        map.set(normCode, p);
+      }
+      const normBarcode = normalizeBarcode(p.barcode);
+      if (normBarcode && !map.has(normBarcode)) {
+        map.set(normBarcode, p);
+      } else if (normBarcode) {
+        // Ensure barcode maps directly to the product owning it
+        map.set(normBarcode, p);
       }
     }
     return map;

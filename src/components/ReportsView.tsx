@@ -20,6 +20,7 @@ import {
   saleStatusLabel,
   toDate,
 } from '../utils/format';
+import { printCurrentView } from '../utils/print';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
 
 type ReportType =
@@ -762,7 +763,7 @@ export const ReportsView: React.FC = () => {
             <span>تصدير التقرير الحالي (Excel)</span>
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => printCurrentView(`تقرير بقالة الحسام - ${reportType}`)}
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
           >
             <Printer className="w-4 h-4" />

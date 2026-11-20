@@ -1,4 +1,4 @@
-import { w as WebPlugin } from "./index-0W7z3TfQ.js";
+import { w as WebPlugin } from "./index-DVlOKkMZ.js";
 // node_modules/@capacitor-community/sqlite/dist/esm/web.js
 var CapacitorSQLiteWeb = class extends WebPlugin {
 	constructor() {

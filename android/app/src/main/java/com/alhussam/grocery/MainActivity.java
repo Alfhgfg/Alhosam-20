@@ -2,17 +2,21 @@ package com.alhussam.grocery;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.print.PrintAttributes;
+import android.print.PrintManager;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -32,6 +36,7 @@ import ee.forgr.capacitor.social.login.SocialLoginPlugin;
 public class MainActivity extends BridgeActivity implements ModifiedMainActivityForSocialLoginPlugin {
 
     private boolean webViewBridgeAttached = false;
+    private WebView activePrintWebView = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +117,77 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
         if (!webViewBridgeAttached) {
             webView.addJavascriptInterface(new AndroidFileBridge(), "AndroidFileBridge");
             webView.addJavascriptInterface(new AndroidNavBridge(), "AndroidNavBridge");
+            webView.addJavascriptInterface(new AndroidPrintBridge(), "AndroidPrintBridge");
             webViewBridgeAttached = true;
+        }
+    }
+
+    private class AndroidPrintBridge {
+        @JavascriptInterface
+        public void printCurrentPage(final String jobName) {
+            final String safeJobName = (jobName == null || jobName.trim().isEmpty())
+                ? "بقالة الحسام - طباعة"
+                : jobName.trim();
+
+            runOnUiThread(() -> {
+                try {
+                    WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+                    if (webView == null) return;
+                    PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+                    if (printManager == null) {
+                        Toast.makeText(MainActivity.this, "خدمة الطباعة غير متوفرة على هذا الجهاز.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    printManager.print(
+                        safeJobName,
+                        webView.createPrintDocumentAdapter(safeJobName),
+                        new PrintAttributes.Builder().build()
+                    );
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "تعذر بدء الطباعة: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void printHtml(final String htmlContent, final String jobName) {
+            if (htmlContent == null || htmlContent.trim().isEmpty()) return;
+            final String safeJobName = (jobName == null || jobName.trim().isEmpty())
+                ? "بقالة الحسام - ملصق باركود"
+                : jobName.trim();
+
+            runOnUiThread(() -> {
+                try {
+                    final WebView printView = new WebView(MainActivity.this);
+                    printView.getSettings().setJavaScriptEnabled(false);
+                    printView.getSettings().setDefaultTextEncodingName("UTF-8");
+                    activePrintWebView = printView;
+
+                    printView.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public void onPageFinished(WebView view, String url) {
+                            try {
+                                PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+                                if (printManager == null) {
+                                    Toast.makeText(MainActivity.this, "خدمة الطباعة غير متوفرة على هذا الجهاز.", Toast.LENGTH_LONG).show();
+                                    return;
+                                }
+                                printManager.print(
+                                    safeJobName,
+                                    view.createPrintDocumentAdapter(safeJobName),
+                                    new PrintAttributes.Builder().build()
+                                );
+                            } catch (Exception e) {
+                                Toast.makeText(MainActivity.this, "تعذر بدء الطباعة: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+
+                    printView.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null);
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "تعذر تجهيز مستند الطباعة: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 

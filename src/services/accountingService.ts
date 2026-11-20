@@ -42,6 +42,12 @@ import {
   roundMoney,
   truncateText,
 } from '../utils/format';
+import {
+  findBarcodeConflict,
+  generateUniqueProductBarcode,
+  isValidBarcodeFormat,
+  normalizeBarcode,
+} from '../utils/barcode';
 import { localDbService } from './localDbService';
 import {
   enqueuePendingOperation,
@@ -336,16 +342,51 @@ export async function createProduct(
     sellPrice: number;
     stock: number;
     minStock: number;
+    existingProducts?: Product[];
     operationId?: string;
     skipQueue?: boolean;
   }
-): Promise<{ productId: string; queued: boolean }> {
+): Promise<{ productId: string; barcode: string; queued: boolean }> {
   const productId = input.productId || generateDocId('prod');
   const opId = input.operationId || generateDocId('op');
 
   let finalCode = (input.code || '').trim().toUpperCase();
   if (finalCode && !CODE_PATTERN.test(finalCode)) {
     throw new Error('كود الصنف يجب أن يحتوي على أحرف إنجليزية وأرقام أو (- , _) فقط.');
+  }
+
+  let finalBarcode = normalizeBarcode(input.barcode);
+  if (finalBarcode && !isValidBarcodeFormat(finalBarcode)) {
+    throw new Error('صيغة الباركود غير صالحة. يرجى استخدام أرقام أو أحرف إنجليزية ورموز قياسية فقط.');
+  }
+
+  const catalog =
+    input.existingProducts && input.existingProducts.length > 0
+      ? input.existingProducts
+      : await localDbService.getCollection<Product>('products').catch(() => []);
+
+  if (finalCode) {
+    const codeConflictWithBarcode = findBarcodeConflict(finalCode, catalog);
+    if (codeConflictWithBarcode) {
+      throw new Error(
+        `كود الصنف "${finalCode}" مستخدم بالفعل في الصنف "${codeConflictWithBarcode.name}" (${codeConflictWithBarcode.code}).`
+      );
+    }
+  }
+
+  if (finalBarcode) {
+    const barcodeConflict = findBarcodeConflict(finalBarcode, catalog);
+    if (barcodeConflict) {
+      throw new Error(
+        `الباركود "${finalBarcode}" مستخدم بالفعل للصنف "${barcodeConflict.name}" (كود: ${barcodeConflict.code}).`
+      );
+    }
+  } else {
+    finalBarcode = generateUniqueProductBarcode(
+      catalog,
+      catalog.length + 1001,
+      productId
+    );
   }
 
   const enqueueOfflineProductCreate = async () => {
@@ -360,7 +401,7 @@ export async function createProduct(
       payload: {
         productId,
         code: offlineCode,
-        barcode: input.barcode?.trim() || '',
+        barcode: finalBarcode,
         name: input.name,
         category: input.category || 'عام',
         description: input.description?.trim() || '',
@@ -374,7 +415,7 @@ export async function createProduct(
       attempts: 0,
       createdAtIso: new Date().toISOString(),
     });
-    return { productId, queued: true };
+    return { productId, barcode: finalBarcode, queued: true };
   };
 
   if (!isAppOnline() && !input.skipQueue) {
@@ -387,9 +428,41 @@ export async function createProduct(
   const devFields = deviceFieldsFor(actor);
 
   try {
+    // Check server-side barcode uniqueness before committing transaction
+    const barcodeCandidatesSnap = await getDocs(
+      query(collection(db, 'products'), where('barcode', '==', finalBarcode))
+    );
+    const serverBarcodeConflictIds = barcodeCandidatesSnap.docs
+      .filter((d) => d.id !== productId)
+      .map((d) => d.id);
+
+    const codeMatchesBarcodeSnap = await getDocs(
+      query(collection(db, 'products'), where('code', '==', finalBarcode))
+    );
+    for (const d of codeMatchesBarcodeSnap.docs) {
+      if (d.id !== productId && !serverBarcodeConflictIds.includes(d.id)) {
+        serverBarcodeConflictIds.push(d.id);
+      }
+    }
+
     await runTransactionWithTimeout(async (tx) => {
       const opSnap = await tx.get(opRef);
       if (opSnap.exists()) return;
+
+      for (const conflictId of serverBarcodeConflictIds) {
+        const conflictSnap = await tx.get(doc(db, 'products', conflictId));
+        if (conflictSnap.exists()) {
+          const cData = conflictSnap.data() as Omit<Product, 'id'>;
+          if (
+            normalizeBarcode(cData.barcode) === finalBarcode ||
+            normalizeBarcode(cData.code) === finalBarcode
+          ) {
+            throw new Error(
+              `الباركود "${finalBarcode}" مستخدم بالفعل للصنف "${cData.name}" (كود: ${cData.code}).`
+            );
+          }
+        }
+      }
 
       const countersSnap = await tx.get(countersRef);
       const nextSeq = countersSnap.exists()
@@ -427,6 +500,7 @@ export async function createProduct(
 
       const payload: Record<string, unknown> = {
         code: truncateText(finalCode, FIELD_LIMITS.codeMax),
+        barcode: truncateText(finalBarcode, FIELD_LIMITS.barcodeMax),
         name: truncateText(input.name, FIELD_LIMITS.nameMax),
         category: truncateText(input.category || 'عام', FIELD_LIMITS.categoryMax),
         unit: truncateText(input.unit || 'حبة', FIELD_LIMITS.unitMax),
@@ -439,9 +513,6 @@ export async function createProduct(
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      if (input.barcode?.trim()) {
-        payload.barcode = truncateText(input.barcode, FIELD_LIMITS.barcodeMax);
-      }
       if (input.description?.trim()) {
         payload.description = truncateText(input.description, FIELD_LIMITS.descriptionMax);
       }
@@ -476,7 +547,7 @@ export async function createProduct(
           'إضافة صنف',
           'product',
           productId,
-          `إضافة الصنف ${input.name} (${finalCode}) بسعر بيع ${cleanSell}`
+          `إضافة الصنف ${input.name} (${finalCode}) باركود ${finalBarcode} بسعر بيع ${cleanSell}`
         )
       );
 
@@ -491,12 +562,17 @@ export async function createProduct(
       });
     }, input.skipQueue);
 
-    return { productId, queued: false };
+    return { productId, barcode: finalBarcode, queued: false };
   } catch (err) {
     if (isNetworkOrOfflineError(err) && !input.skipQueue) {
       return enqueueOfflineProductCreate();
     }
-    if (err instanceof Error && (err.message.includes('مستخدم بالفعل') || err.message.includes('كود الصنف'))) {
+    if (
+      err instanceof Error &&
+      (err.message.includes('مستخدم بالفعل') ||
+        err.message.includes('كود الصنف') ||
+        err.message.includes('الباركود'))
+    ) {
       throw err;
     }
     handleFirestoreError(err, OperationType.WRITE, 'products');
@@ -516,17 +592,40 @@ export async function updateProduct(
     sellPrice: number;
     minStock: number;
     isActive: boolean;
+    existingProducts?: Product[];
     operationId?: string;
     skipQueue?: boolean;
     baseUpdatedAtMs?: number | null;
     forceApply?: boolean;
   }
-): Promise<{ queued: boolean }> {
+): Promise<{ barcode: string; queued: boolean }> {
   const opId = updates.operationId || generateDocId('op');
   const baseUpdatedAtMs =
     updates.baseUpdatedAtMs !== undefined
       ? updates.baseUpdatedAtMs
       : toUpdatedAtMs(product.updatedAt);
+
+  let finalBarcode = normalizeBarcode(updates.barcode);
+  if (finalBarcode && !isValidBarcodeFormat(finalBarcode)) {
+    throw new Error('صيغة الباركود غير صالحة. يرجى استخدام أرقام أو أحرف إنجليزية ورموز قياسية فقط.');
+  }
+
+  const catalog =
+    updates.existingProducts && updates.existingProducts.length > 0
+      ? updates.existingProducts
+      : await localDbService.getCollection<Product>('products').catch(() => []);
+
+  if (finalBarcode) {
+    const conflict = findBarcodeConflict(finalBarcode, catalog, product.id);
+    if (conflict) {
+      throw new Error(
+        `الباركود "${finalBarcode}" مستخدم بالفعل للصنف "${conflict.name}" (كود: ${conflict.code}).`
+      );
+    }
+  } else {
+    // Ensure every product always has a valid unique barcode
+    finalBarcode = generateUniqueProductBarcode(catalog, catalog.length + 1001, product.id);
+  }
 
   const enqueueOfflineProductUpdate = async () => {
     await enqueuePendingOperation({
@@ -538,7 +637,7 @@ export async function updateProduct(
       payload: {
         productId: product.id,
         code: product.code,
-        barcode: updates.barcode?.trim() || '',
+        barcode: finalBarcode,
         name: updates.name,
         category: updates.category,
         description: updates.description?.trim() || '',
@@ -557,7 +656,7 @@ export async function updateProduct(
       attempts: 0,
       createdAtIso: new Date().toISOString(),
     });
-    return { queued: true };
+    return { barcode: finalBarcode, queued: true };
   };
 
   if (!isAppOnline() && !updates.skipQueue) {
@@ -569,6 +668,22 @@ export async function updateProduct(
   const devFields = deviceFieldsFor(actor);
 
   try {
+    const barcodeCandidatesSnap = await getDocs(
+      query(collection(db, 'products'), where('barcode', '==', finalBarcode))
+    );
+    const serverBarcodeConflictIds = barcodeCandidatesSnap.docs
+      .filter((d) => d.id !== product.id)
+      .map((d) => d.id);
+
+    const codeMatchesBarcodeSnap = await getDocs(
+      query(collection(db, 'products'), where('code', '==', finalBarcode))
+    );
+    for (const d of codeMatchesBarcodeSnap.docs) {
+      if (d.id !== product.id && !serverBarcodeConflictIds.includes(d.id)) {
+        serverBarcodeConflictIds.push(d.id);
+      }
+    }
+
     const payload: Record<string, unknown> = {
       name: truncateText(updates.name, FIELD_LIMITS.nameMax),
       category: truncateText(updates.category, FIELD_LIMITS.categoryMax),
@@ -577,9 +692,7 @@ export async function updateProduct(
       sellPrice: roundMoney(Math.max(0, updates.sellPrice)),
       minStock: Math.max(0, updates.minStock),
       isActive: updates.isActive,
-      barcode: updates.barcode?.trim()
-        ? truncateText(updates.barcode, FIELD_LIMITS.barcodeMax)
-        : deleteField(),
+      barcode: truncateText(finalBarcode, FIELD_LIMITS.barcodeMax),
       description: updates.description?.trim()
         ? truncateText(updates.description, FIELD_LIMITS.descriptionMax)
         : deleteField(),
@@ -589,6 +702,21 @@ export async function updateProduct(
     await runTransactionWithTimeout(async (tx) => {
       const opSnap = await tx.get(opRef);
       if (opSnap.exists()) return;
+
+      for (const conflictId of serverBarcodeConflictIds) {
+        const conflictSnap = await tx.get(doc(db, 'products', conflictId));
+        if (conflictSnap.exists()) {
+          const cData = conflictSnap.data() as Omit<Product, 'id'>;
+          if (
+            normalizeBarcode(cData.barcode) === finalBarcode ||
+            normalizeBarcode(cData.code) === finalBarcode
+          ) {
+            throw new Error(
+              `الباركود "${finalBarcode}" مستخدم بالفعل للصنف "${cData.name}" (كود: ${cData.code}).`
+            );
+          }
+        }
+      }
 
       const prodSnap = await tx.get(productRef);
       if (!prodSnap.exists()) {
@@ -620,7 +748,7 @@ export async function updateProduct(
           'product',
           product.id,
           `تعديل بيانات الصنف ${updates.name} (${product.code})`,
-          `سعر الشراء: ${product.costPrice} -> ${payload.costPrice}, سعر البيع: ${product.sellPrice} -> ${payload.sellPrice}`
+          `الباركود: ${finalBarcode}, سعر الشراء: ${product.costPrice} -> ${payload.costPrice}, سعر البيع: ${product.sellPrice} -> ${payload.sellPrice}`
         )
       );
       tx.set(opRef, {
@@ -633,14 +761,17 @@ export async function updateProduct(
         createdAt: serverTimestamp(),
       });
     }, updates.skipQueue);
-    return { queued: false };
+    return { barcode: finalBarcode, queued: false };
   } catch (err) {
     if (isNetworkOrOfflineError(err) && !updates.skipQueue) {
       return enqueueOfflineProductUpdate();
     }
     if (
       err instanceof Error &&
-      (err.message.includes('تعارض') || err.message.includes('غير موجود'))
+      (err.message.includes('تعارض') ||
+        err.message.includes('غير موجود') ||
+        err.message.includes('مستخدم بالفعل') ||
+        err.message.includes('الباركود'))
     ) {
       throw err;
     }
