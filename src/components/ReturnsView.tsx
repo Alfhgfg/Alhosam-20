@@ -13,7 +13,7 @@ import {
   formatMoney,
   saleStatusLabel,
 } from '../utils/format';
-import { BackButton } from './UnifiedBackHeader';
+import { BackButton, PageHeader } from './UnifiedBackHeader';
 
 export const ReturnsView: React.FC = () => {
   const { actorInfo, isAdmin, hasPermission } = useAuth();
@@ -154,16 +154,14 @@ export const ReturnsView: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">المرتجعات وإلغاء الفواتير</h1>
-        <p className="text-xs text-slate-500 mt-0.5">
-          استرجاع أصناف محددة · إعادة الصالح للمخزون · رد المبالغ · سجل الإلغاء والتعديلات
-        </p>
-      </div>
+      <PageHeader
+        title="المرتجعات وإلغاء الفواتير"
+        subtitle="استرجاع أصناف محددة · إعادة الصالح للمخزون · رد المبالغ · سجل الإلغاء والتعديلات"
+      />
 
       {feedback && (
         <div
-          className={`p-3.5 rounded-xl text-xs border ${
+          className={`p-3.5 rounded-xl text-xs font-medium border ${
             feedback.type === 'ok'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : 'bg-red-50 border-red-200 text-red-700'
@@ -173,69 +171,76 @@ export const ReturnsView: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Select Invoice */}
-        <div className="lg:col-span-6 bg-white border border-slate-200 rounded-xl p-4 space-y-3">
-          <h2 className="text-sm font-bold text-slate-900">اختر فاتورة لإجراء مرتجع أو إلغاء</h2>
+        <div className="lg:col-span-6 ui-card p-4 sm:p-5 space-y-3.5">
+          <h2 className="text-sm font-bold text-slate-900">
+            اختر فاتورة لإجراء مرتجع أو إلغاء
+          </h2>
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="بحث برقم الفاتورة أو اسم العميل..."
-              className="w-full pr-9 pl-3 py-2 text-sm border border-slate-200 rounded-lg"
+              className="ui-input pr-10"
             />
           </div>
 
-          <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+          <div className="space-y-1.5 max-h-96 overflow-y-auto">
             {returnableSales.length === 0 ? (
-              <p className="py-8 text-center text-xs text-slate-500">
+              <p className="py-10 text-center text-xs text-slate-500">
                 لا توجد فواتير قابلة للإرجاع حالياً.
               </p>
             ) : (
-              returnableSales.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => openSaleForReturn(s)}
-                  className={`w-full text-right py-3 px-3 flex items-center justify-between hover:bg-slate-50 rounded-lg cursor-pointer ${
-                    selectedSale?.id === s.id ? 'bg-emerald-50/60' : ''
-                  }`}
-                >
-                  <div>
-                    <div className="font-mono-num font-bold text-sm text-slate-900">
-                      {s.invoiceNumber} · {s.customerName}
+              returnableSales.map((s) => {
+                const isSelected = selectedSale?.id === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => openSaleForReturn(s)}
+                    className={`w-full text-right py-3 px-3.5 flex items-center justify-between gap-3 rounded-xl border transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-50/80 border-emerald-200'
+                        : 'bg-white border-slate-100 hover:bg-slate-50 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="font-mono-num font-bold text-sm text-slate-900 truncate">
+                        {s.invoiceNumber} · {s.customerName}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {formatDateTime(s.createdAt)} · {saleStatusLabel(s.status)}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-500">
-                      {formatDateTime(s.createdAt)} · {saleStatusLabel(s.status)}
+                    <div className="font-mono-num font-bold text-emerald-700 text-sm shrink-0">
+                      {formatMoney(s.total, settings.currency)}
                     </div>
-                  </div>
-                  <div className="font-mono-num font-bold text-emerald-700 text-sm">
-                    {formatMoney(s.total, settings.currency)}
-                  </div>
-                </button>
-              ))
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
 
         {/* Return Form */}
-        <div className="lg:col-span-6 bg-white border border-slate-200 rounded-xl p-5">
+        <div className="lg:col-span-6 ui-card p-4 sm:p-5">
           {!selectedSale ? (
             <div className="py-16 text-center text-sm text-slate-500">
               اختر فاتورة من القائمة لبدء عملية الإرجاع أو الإلغاء.
             </div>
           ) : (
             <form onSubmit={handleReturnSubmit} className="space-y-4">
-              <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <BackButton onClick={requestCloseSale} compact />
                   <div className="min-w-0">
                     <h3 className="text-base font-bold text-slate-900 truncate">
                       معالجة الفاتورة {selectedSale.invoiceNumber}
                     </h3>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
                       العميل: {selectedSale.customerName} · الإجمالي:{' '}
                       {formatMoney(selectedSale.total, settings.currency)}
                     </p>
@@ -243,14 +248,54 @@ export const ReturnsView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
+              {/* Mobile Items Cards */}
+              <div className="md:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                {selectedSale.items.map((it) => {
+                  const prevRet = getReturnedQty(selectedSale.id, it.productId);
+                  const maxRet = Math.max(0, it.qty - prevRet);
+                  return (
+                    <div key={it.productId} className="p-3 bg-white flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-xs text-slate-900 truncate">
+                          {it.name}
+                        </div>
+                        <div className="text-[11px] font-mono-num text-slate-500 mt-0.5">
+                          {it.code} · مباع: {it.qty} · متاح: {maxRet}
+                        </div>
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max={maxRet}
+                        step="any"
+                        disabled={!canReturn || maxRet === 0}
+                        value={returnQtys[it.productId] ?? 0}
+                        onChange={(e) =>
+                          setReturnQtys((prev) => ({
+                            ...prev,
+                            [it.productId]: Math.min(
+                              maxRet,
+                              Math.max(0, Number(e.target.value) || 0)
+                            ),
+                          }))
+                        }
+                        className="w-20 px-2.5 py-2 text-center text-sm font-mono-num border border-slate-200 rounded-xl bg-white shrink-0"
+                        aria-label={`كمية إرجاع ${it.name}`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block border border-slate-200 rounded-xl overflow-hidden">
                 <table className="w-full text-xs">
                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
                     <tr>
-                      <th className="text-right py-2 px-3">الصنف</th>
-                      <th className="text-center py-2 px-3">المباع</th>
-                      <th className="text-center py-2 px-3">المتاح للإرجاع</th>
-                      <th className="text-center py-2 px-3">كمية الإرجاع</th>
+                      <th className="text-right py-2.5 px-3">الصنف</th>
+                      <th className="text-center py-2.5 px-3">المباع</th>
+                      <th className="text-center py-2.5 px-3">المتاح للإرجاع</th>
+                      <th className="text-center py-2.5 px-3">كمية الإرجاع</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -259,13 +304,13 @@ export const ReturnsView: React.FC = () => {
                       const maxRet = Math.max(0, it.qty - prevRet);
                       return (
                         <tr key={it.productId}>
-                          <td className="py-2 px-3">
+                          <td className="py-2.5 px-3">
                             <div className="font-semibold text-slate-900">{it.name}</div>
                             <div className="font-mono-num text-slate-500">{it.code}</div>
                           </td>
-                          <td className="py-2 px-3 text-center font-mono-num">{it.qty}</td>
-                          <td className="py-2 px-3 text-center font-mono-num">{maxRet}</td>
-                          <td className="py-2 px-3 text-center">
+                          <td className="py-2.5 px-3 text-center font-mono-num">{it.qty}</td>
+                          <td className="py-2.5 px-3 text-center font-mono-num">{maxRet}</td>
+                          <td className="py-2.5 px-3 text-center">
                             <input
                               type="number"
                               min="0"
@@ -282,7 +327,7 @@ export const ReturnsView: React.FC = () => {
                                   ),
                                 }))
                               }
-                              className="w-20 px-2 py-1 text-center font-mono-num border border-slate-200 rounded-md"
+                              className="w-20 px-2 py-1.5 text-center font-mono-num border border-slate-200 rounded-lg"
                             />
                           </td>
                         </tr>
@@ -292,27 +337,29 @@ export const ReturnsView: React.FC = () => {
                 </table>
               </div>
 
-              <div className="space-y-2 text-xs text-slate-700">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="space-y-2.5 text-xs text-slate-700 bg-slate-50/80 border border-slate-200/80 rounded-xl p-3.5">
+                <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={restockValid}
                     onChange={(e) => setRestockValid(e.target.checked)}
+                    className="w-4 h-4 accent-emerald-700"
                   />
                   <span>الأصناف المرتجعة صالحة وتُعاد تلقائياً إلى رصيد المخزون</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={refundCash}
                     onChange={(e) => setRefundCash(e.target.checked)}
+                    className="w-4 h-4 accent-emerald-700"
                   />
                   <span>رد قيمة المرتجع نقداً من الصندوق (بدلاً من خصمه من دين العميل)</span>
                 </label>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   سبب الإرجاع أو الإلغاء *
                 </label>
                 <input
@@ -321,16 +368,16 @@ export const ReturnsView: React.FC = () => {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="مثال: رغبة العميل في التبديل / منتج تالف / خطأ في الإدخال"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="ui-input"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-2">
+              <div className="flex flex-wrap items-center gap-2.5 pt-2">
                 {canReturn && (
                   <button
                     type="submit"
                     disabled={processing}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl cursor-pointer"
+                    className="ui-btn-primary flex-1 sm:flex-none px-5 text-xs"
                   >
                     <RotateCcw className="w-4 h-4" />
                     <span>اعتماد المرتجع</span>
@@ -341,7 +388,7 @@ export const ReturnsView: React.FC = () => {
                     type="button"
                     disabled={processing}
                     onClick={() => handleCancelInvoice(selectedSale)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-none px-5 min-h-[42px] bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
                   >
                     <Ban className="w-4 h-4" />
                     <span>إلغاء الفاتورة بالكامل</span>
@@ -354,57 +401,87 @@ export const ReturnsView: React.FC = () => {
       </div>
 
       {/* Returns Log */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-200">
+      <div className="ui-card overflow-hidden">
+        <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200">
           <h2 className="text-sm font-bold text-slate-900">
             سجل المرتجعات ({returns.length})
           </h2>
         </div>
         {returns.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-500">
+          <div className="p-10 text-center text-xs text-slate-500">
             لا توجد مرتجعات مسجلة.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
-                <tr>
-                  <th className="text-right py-2.5 px-4">رقم المرتجع</th>
-                  <th className="text-right py-2.5 px-4">الفاتورة</th>
-                  <th className="text-right py-2.5 px-4">العميل</th>
-                  <th className="text-right py-2.5 px-4">الأصناف</th>
-                  <th className="text-left py-2.5 px-4">المبلغ المسترد</th>
-                  <th className="text-right py-2.5 px-4">السبب والموظف</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {returns.map((r) => (
-                  <tr key={r.id}>
-                    <td className="py-2.5 px-4 font-mono-num font-semibold">
-                      {r.returnNumber}
-                    </td>
-                    <td className="py-2.5 px-4 font-mono-num text-slate-700">
-                      {r.invoiceNumber}
-                    </td>
-                    <td className="py-2.5 px-4">{r.customerName}</td>
-                    <td className="py-2.5 px-4 text-xs text-slate-600">
-                      {r.items.map((i) => `${i.name} (${i.qty})`).join(' · ')}
-                    </td>
-                    <td className="py-2.5 px-4 text-left font-mono-num font-bold text-red-700">
-                      {formatMoney(r.refundAmount, settings.currency)}
-                    </td>
-                    <td className="py-2.5 px-4 text-xs text-slate-600">
-                      <div>{r.reason}</div>
-                      <div className="text-slate-400">
-                        {r.employeeName}
-                        {r.deviceName ? ` · ${r.deviceName}` : ''} · {formatDateTime(r.createdAt)}
+          <>
+            {/* Mobile Returns Cards */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {returns.map((r) => (
+                <div key={r.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono-num font-bold text-xs text-slate-900">
+                        {r.returnNumber} · فاتورة {r.invoiceNumber}
                       </div>
-                    </td>
+                      <div className="text-xs font-medium text-slate-700 mt-0.5">
+                        {r.customerName}
+                      </div>
+                    </div>
+                    <div className="font-mono-num font-bold text-sm text-red-700 shrink-0">
+                      {formatMoney(r.refundAmount, settings.currency)}
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {r.items.map((i) => `${i.name} (${i.qty})`).join(' · ')}
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    {r.reason} · {r.employeeName} · {formatDateTime(r.createdAt)}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50/90 border-b border-slate-200 text-xs text-slate-600">
+                  <tr>
+                    <th className="text-right py-3 px-4">رقم المرتجع</th>
+                    <th className="text-right py-3 px-4">الفاتورة</th>
+                    <th className="text-right py-3 px-4">العميل</th>
+                    <th className="text-right py-3 px-4">الأصناف</th>
+                    <th className="text-left py-3 px-4">المبلغ المسترد</th>
+                    <th className="text-right py-3 px-4">السبب والموظف</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {returns.map((r) => (
+                    <tr key={r.id} className="hover:bg-slate-50/70">
+                      <td className="py-3 px-4 font-mono-num font-semibold">
+                        {r.returnNumber}
+                      </td>
+                      <td className="py-3 px-4 font-mono-num text-slate-700">
+                        {r.invoiceNumber}
+                      </td>
+                      <td className="py-3 px-4">{r.customerName}</td>
+                      <td className="py-3 px-4 text-xs text-slate-600">
+                        {r.items.map((i) => `${i.name} (${i.qty})`).join(' · ')}
+                      </td>
+                      <td className="py-3 px-4 text-left font-mono-num font-bold text-red-700">
+                        {formatMoney(r.refundAmount, settings.currency)}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-600">
+                        <div>{r.reason}</div>
+                        <div className="text-slate-400">
+                          {r.employeeName}
+                          {r.deviceName ? ` · ${r.deviceName}` : ''} · {formatDateTime(r.createdAt)}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -25,7 +25,7 @@ import { normalizeBarcode } from '../utils/barcode';
 import { formatMoney, formatNumber, generateDocId, roundMoney } from '../utils/format';
 import { CameraBarcodeModal } from './CameraBarcodeModal';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
-import { ModalSubPageHeader } from './UnifiedBackHeader';
+import { ModalSubPageHeader, PageHeader } from './UnifiedBackHeader';
 
 function playPosScanBeep(success: boolean) {
   try {
@@ -388,33 +388,38 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">شاشة البيع السريع (الكاشير)</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            أدخل كود الصنف أو الباركود للإضافة الفورية · جميع الفواتير تُحفظ وترتبط بحساب المسؤول لحظياً
-            {!isOnline && ' · وضع عدم الاتصال نشط (حفظ محلي دائم)'}
-          </p>
-        </div>
-      </div>
+    <div className="space-y-4 sm:space-y-5">
+      <PageHeader
+        title="شاشة البيع السريع (الكاشير)"
+        subtitle={`أدخل كود الصنف أو الباركود للإضافة الفورية · جميع الفواتير تُحفظ وترتبط بحساب المسؤول لحظياً${
+          !isOnline ? ' · وضع عدم الاتصال نشط (حفظ محلي دائم)' : ''
+        }`}
+      />
 
       {errorMsg && (
-        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center justify-between gap-3">
+        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-center justify-between gap-3">
           <span>{errorMsg}</span>
-          <button onClick={() => setErrorMsg(null)} className="p-1 cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setErrorMsg(null)}
+            className="p-1.5 rounded-lg hover:bg-red-100 cursor-pointer shrink-0"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {successMsg && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between gap-3">
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)} className="p-1 cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setSuccessMsg(null)}
+            className="p-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer shrink-0"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -426,51 +431,54 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
             <ScanBarcode className="w-4 h-4 shrink-0 text-emerald-700" />
             <span>{scanToast}</span>
           </div>
-          <button onClick={() => setScanToast(null)} className="p-1 cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setScanToast(null)}
+            className="p-1 rounded-lg hover:bg-emerald-100 cursor-pointer shrink-0"
+          >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Right/Main Panel: Code scanner + Product selector */}
         <div className="lg:col-span-7 space-y-4">
           {/* Quick code / barcode input */}
-          <form
-            onSubmit={handleBarcodeSubmit}
-            className="bg-white border border-slate-200 rounded-xl p-3 space-y-2"
-          >
+          <form onSubmit={handleBarcodeSubmit} className="ui-card p-3.5 space-y-2.5">
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
               <div className="relative flex-1 min-w-[200px]">
-                <Barcode className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <Barcode className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   ref={codeFieldRef}
                   type="text"
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
-                  placeholder="امسح الباركود في أي وقت أو اكتب كود الصنف واضغط Enter..."
-                  className="w-full pr-9 pl-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 font-mono-num"
+                  placeholder="امسح الباركود أو اكتب كود الصنف واضغط Enter..."
+                  className="ui-input pr-10 bg-slate-50/70 font-mono-num"
                   autoFocus
                 />
               </div>
-              <button
-                type="submit"
-                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap"
-              >
-                إضافة بالكود
-              </button>
-              <button
-                type="button"
-                onClick={() => setCameraOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap"
-              >
-                <Camera className="w-4 h-4" />
-                <span>مسح بالكاميرا</span>
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="submit"
+                  className="flex-1 sm:flex-none min-h-[42px] px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  إضافة بالكود
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCameraOpen(true)}
+                  className="flex-1 sm:flex-none ui-btn-primary text-xs sm:text-sm"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>مسح بالكاميرا</span>
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 px-0.5">
               <span>
-                يدعم القراءة من الماسح الضوئي (USB / Bluetooth) أو عبر كاميرا الجهاز مباشرة
+                يدعم القراءة من الماسح الضوئي (USB / Bluetooth) أو كاميرا الهاتف
               </span>
               <button
                 type="button"
@@ -488,15 +496,15 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
           </form>
 
           {/* Search & Category Filter */}
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+          <div className="ui-card p-3.5 sm:p-4 space-y-3">
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="بحث سريع باسم الصنف أو الكود..."
-                className="w-full pr-9 pl-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600"
+                placeholder="بحث سريع باسم الصنف أو الكود أو الباركود..."
+                className="ui-input pr-10"
               />
             </div>
 
@@ -506,10 +514,10 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  className={`px-3.5 py-2 min-h-[36px] text-xs font-semibold rounded-xl transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     selectedCategory === cat
-                      ? 'bg-emerald-700 text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80'
                   }`}
                 >
                   {cat}
@@ -522,7 +530,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                 لا توجد أصناف مطابقة للبحث.
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[520px] overflow-y-auto pt-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[500px] overflow-y-auto pt-1">
                 {filteredProducts.map((product) => {
                   const avail = availableStock(product);
                   const reserved = reservedStockByProductId.get(product.id) || 0;
@@ -534,10 +542,10 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                       type="button"
                       disabled={outOfStock}
                       onClick={() => addProductToCart(product)}
-                      className={`text-right p-3 rounded-xl border transition-colors flex flex-col justify-between gap-2 cursor-pointer ${
+                      className={`text-right p-3 rounded-xl border transition-all duration-150 flex flex-col justify-between gap-2 min-h-[104px] ${
                         outOfStock
                           ? 'bg-slate-50 border-slate-200 opacity-50 cursor-not-allowed'
-                          : 'bg-white border-slate-200 hover:border-emerald-600 hover:bg-emerald-50/30'
+                          : 'bg-white border-slate-200/90 hover:border-emerald-600 hover:bg-emerald-50/35 active:scale-[0.98] cursor-pointer shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
                       }`}
                     >
                       <div className="space-y-1">
@@ -545,16 +553,16 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                           {product.code}
                           {product.barcode ? ` · ${product.barcode}` : ''}
                         </div>
-                        <div className="text-sm font-semibold text-slate-900 line-clamp-2">
+                        <div className="text-[13px] sm:text-sm font-bold text-slate-900 line-clamp-2 leading-snug">
                           {product.name}
                         </div>
                       </div>
-                      <div className="flex items-end justify-between gap-1 pt-1 border-t border-slate-100">
-                        <span className="text-sm font-bold text-emerald-700 font-mono-num">
+                      <div className="flex items-end justify-between gap-1 pt-1.5 border-t border-slate-100">
+                        <span className="text-xs sm:text-sm font-bold text-emerald-700 font-mono-num">
                           {formatMoney(product.sellPrice, settings.currency)}
                         </span>
                         <span
-                          className={`text-[11px] font-mono-num ${
+                          className={`text-[11px] font-mono-num font-medium ${
                             outOfStock
                               ? 'text-red-600'
                               : lowStock
@@ -563,7 +571,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                           }`}
                         >
                           المتاح: {formatNumber(avail)}
-                          {reserved > 0 ? ` (قيد المزامنة: ${formatNumber(reserved)})` : ''}
+                          {reserved > 0 ? ` (${formatNumber(reserved)})` : ''}
                         </span>
                       </div>
                     </button>
@@ -575,11 +583,15 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
         </div>
 
         {/* Left Panel: Invoice Cart & Checkout */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="lg:col-span-5 ui-card overflow-hidden lg:sticky lg:top-20">
+          <div className="px-4 py-3.5 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/80">
             <div className="flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4 text-emerald-700" />
-              <h2 className="text-sm font-bold text-slate-900">الفاتورة الحالية</h2>
+              <span className="w-7 h-7 rounded-lg bg-emerald-700 text-white flex items-center justify-center">
+                <ShoppingCart className="w-4 h-4" />
+              </span>
+              <h2 className="text-sm font-bold text-slate-900">
+                الفاتورة الحالية {cart.length > 0 ? `(${cart.length})` : ''}
+              </h2>
             </div>
             {cart.length > 0 && (
               <button
@@ -588,7 +600,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                   pendingOpIdRef.current = null;
                   setCart([]);
                 }}
-                className="text-xs text-red-600 hover:underline cursor-pointer"
+                className="text-xs font-semibold text-red-600 hover:underline cursor-pointer"
               >
                 تفريغ السلة
               </button>
@@ -603,7 +615,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                 <button
                   type="button"
                   onClick={() => setShowNewCustomer(true)}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:underline cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>عميل جديد</span>
@@ -612,7 +624,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
               <select
                 value={selectedCustomerId}
                 onChange={(e) => setSelectedCustomerId(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-600"
+                className="ui-input"
               >
                 <option value="">عميل نقدي عام</option>
                 {customers.map((c) => (
@@ -632,12 +644,12 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                 أضف أصنافاً من القائمة أو عبر كود الصنف لبدء الفاتورة
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl max-h-72 overflow-y-auto">
+              <div className="divide-y divide-slate-100 border border-slate-200/90 rounded-xl max-h-72 overflow-y-auto">
                 {cart.map((line) => (
-                  <div key={line.product.id} className="p-3 space-y-2">
+                  <div key={line.product.id} className="p-3 space-y-2.5">
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-slate-900 truncate">
                           {line.product.name}
                         </div>
                         <div className="text-[11px] font-mono-num text-slate-500">
@@ -649,19 +661,19 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                       <button
                         type="button"
                         onClick={() => updateCartQty(line.product.id, 0)}
-                        className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer shrink-0"
                         aria-label="إزالة"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
                         <button
                           type="button"
                           onClick={() => updateCartQty(line.product.id, line.qty - 1)}
-                          className="p-1.5 hover:bg-slate-100 text-slate-700 cursor-pointer"
+                          className="min-w-[36px] min-h-[36px] flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 text-slate-700 cursor-pointer"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -673,12 +685,12 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                           onChange={(e) =>
                             updateCartQty(line.product.id, Number(e.target.value) || 0)
                           }
-                          className="w-14 text-center text-sm font-mono-num py-1 border-x border-slate-200 focus:outline-none"
+                          className="w-12 text-center text-sm font-mono-num font-bold bg-white py-1.5 border-x border-slate-200 focus:outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => updateCartQty(line.product.id, line.qty + 1)}
-                          className="p-1.5 hover:bg-slate-100 text-slate-700 cursor-pointer"
+                          className="min-w-[36px] min-h-[36px] flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 text-slate-700 cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -697,7 +709,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                                 Number(e.target.value) || 0
                               )
                             }
-                            className="w-20 px-2 py-1 text-xs font-mono-num text-left border border-slate-200 rounded-md"
+                            className="w-20 px-2 py-1.5 text-xs font-mono-num text-left border border-slate-200 rounded-lg bg-white"
                             title="سعر الوحدة"
                           />
                         ) : (
@@ -716,8 +728,8 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
             )}
 
             {/* Payment & Discount */}
-            <div className="space-y-3 border-t border-slate-200 pt-3">
-              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-lg">
+            <div className="space-y-3 border-t border-slate-200/80 pt-3.5">
+              <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-xl">
                 {(
                   [
                     ['cash', 'نقدي'],
@@ -729,9 +741,9 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                     key={mode}
                     type="button"
                     onClick={() => setPaymentMethod(mode)}
-                    className={`py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                    className={`py-2 min-h-[38px] text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                       paymentMethod === mode
-                        ? 'bg-white text-slate-900 shadow-xs'
+                        ? 'bg-white text-emerald-800 shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -742,7 +754,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-600 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     الخصم {!canDiscount && '(يتطلب صلاحية)'}
                   </label>
                   <input
@@ -752,12 +764,12 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                     disabled={!canDiscount}
                     value={discountInput}
                     onChange={(e) => setDiscountInput(e.target.value)}
-                    className="w-full px-3 py-2 text-sm font-mono-num border border-slate-200 rounded-lg disabled:bg-slate-100"
+                    className="ui-input font-mono-num disabled:bg-slate-100"
                   />
                 </div>
                 {paymentMethod === 'partial' && (
                   <div>
-                    <label className="block text-xs text-slate-600 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       المبلغ المدفوع الآن
                     </label>
                     <input
@@ -768,7 +780,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                       value={paidAmountInput}
                       onChange={(e) => setPaidAmountInput(e.target.value)}
                       placeholder="0.00"
-                      className="w-full px-3 py-2 text-sm font-mono-num border border-slate-200 rounded-lg"
+                      className="ui-input font-mono-num"
                     />
                   </div>
                 )}
@@ -779,11 +791,11 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="ملاحظات اختيارية على الفاتورة..."
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg"
+                className="ui-input text-xs"
               />
 
               {/* Totals box */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5 text-sm">
+              <div className="bg-emerald-50/55 border border-emerald-200/80 rounded-xl p-3.5 space-y-1.5 text-sm">
                 <div className="flex justify-between text-slate-600">
                   <span>المجموع الفرعي</span>
                   <span className="font-mono-num">{formatMoney(subtotal, settings.currency)}</span>
@@ -794,7 +806,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                     <span className="font-mono-num">- {formatMoney(discount, settings.currency)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
+                <div className="flex justify-between text-base font-bold text-slate-900 border-t border-emerald-200/70 pt-2">
                   <span>الإجمالي النهائي</span>
                   <span className="font-mono-num text-emerald-700">
                     {formatMoney(total, settings.currency)}
@@ -820,7 +832,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                 type="button"
                 disabled={submitting || cart.length === 0}
                 onClick={handleCheckout}
-                className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer"
+                className="ui-btn-primary w-full min-h-[48px] text-sm font-bold"
               >
                 {submitting ? 'جاري حفظ الفاتورة...' : 'إصدار الفاتورة وحفظ البيع'}
               </button>
@@ -831,16 +843,16 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
 
       {/* Quick Add Customer Modal */}
       {showNewCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <form
             onSubmit={handleCreateQuickCustomer}
-            className="bg-white border border-slate-200 rounded-2xl w-full max-w-md overflow-hidden shadow-xl"
+            className="bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
           >
             <ModalSubPageHeader
               title="تسجيل عميل جديد سريع"
               onBack={requestCloseNewCustomer}
             />
-            <div className="p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4">
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -851,7 +863,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                     type="text"
                     value={newCustName}
                     onChange={(e) => setNewCustName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
                 <div>
@@ -862,7 +874,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                     type="text"
                     value={newCustPhone}
                     onChange={(e) => setNewCustPhone(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                    className="ui-input font-mono-num"
                   />
                 </div>
                 <div>
@@ -873,7 +885,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                     type="text"
                     value={newCustAddress}
                     onChange={(e) => setNewCustAddress(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
               </div>
@@ -881,7 +893,7 @@ export const PosView: React.FC<PosViewProps> = ({ isActive = true }) => {
                 <button
                   type="submit"
                   disabled={savingCustomer}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 rounded-lg hover:bg-emerald-800 cursor-pointer"
+                  className="ui-btn-primary w-full sm:w-auto text-xs"
                 >
                   {savingCustomer ? 'جاري الحفظ...' : 'حفظ واختيار العميل'}
                 </button>

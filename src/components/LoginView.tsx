@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Ban,
   Check,
-  CheckCircle2,
   Clock,
   Laptop,
   LogOut,
@@ -10,7 +9,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
-  Store,
   Tablet,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +18,7 @@ import {
   isAllowedDeviceName,
   REQUIRED_DEVICE_NAME,
 } from '../utils/device';
+import { StoreBrandLogo } from './StoreBrandLogo';
 
 export const LoginView: React.FC = () => {
   const {
@@ -74,10 +73,12 @@ export const LoginView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-4 sm:p-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-md w-full text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-slate-700 font-medium">جاري التحقق من الحساب والصلاحيات والجهاز...</p>
+      <div className="min-h-[100dvh] bg-[#f6f8f7] flex items-center justify-center p-4 sm:p-6">
+        <div className="ui-card p-8 max-w-md w-full text-center space-y-3.5">
+          <div className="w-10 h-10 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-700 font-semibold">
+            جاري التحقق من الحساب والصلاحيات والجهاز...
+          </p>
         </div>
       </div>
     );
@@ -85,10 +86,10 @@ export const LoginView: React.FC = () => {
 
   if (firebaseUser && isDeviceBlocked) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-red-200 rounded-xl p-8 max-w-md w-full space-y-5 text-center">
-          <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
-            <Ban className="w-6 h-6" />
+      <div className="min-h-[100dvh] bg-[#f6f8f7] flex items-center justify-center p-4 sm:p-6">
+        <div className="bg-white border border-red-200 rounded-2xl p-6 sm:p-8 max-w-md w-full space-y-5 text-center shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
+            <Ban className="w-7 h-7" />
           </div>
           <div className="space-y-2">
             <h1 className="text-xl font-bold text-slate-900">تم حظر هذا الجهاز</h1>
@@ -99,13 +100,14 @@ export const LoginView: React.FC = () => {
               </strong>{' '}
               بواسطة مسؤول النظام. لا يمكن تنفيذ عمليات بيع أو الاطلاع على البيانات من هذا الجهاز حتى تتم إعادة تفعيله.
             </p>
-            <div className="text-xs font-mono-num text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+            <div className="text-xs font-mono-num text-slate-500 bg-slate-50 border border-slate-200 rounded-xl p-3">
               معرّف الجهاز: {deviceIdentity.deviceId}
             </div>
           </div>
           <button
+            type="button"
             onClick={logout}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>تسجيل الخروج</span>
@@ -117,8 +119,8 @@ export const LoginView: React.FC = () => {
 
   if (firebaseUser && !isCurrentNameAllowed) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border-2 border-amber-300 rounded-2xl p-8 max-w-md w-full space-y-5 text-center shadow-xs">
+      <div className="min-h-[100dvh] bg-[#f6f8f7] flex items-center justify-center p-4 sm:p-6">
+        <div className="bg-white border border-amber-300 rounded-2xl p-6 sm:p-8 max-w-md w-full space-y-5 text-center shadow-sm">
           <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
             <ShieldAlert className="w-7 h-7" />
           </div>
@@ -126,11 +128,11 @@ export const LoginView: React.FC = () => {
             <h1 className="text-xl font-bold text-slate-900">الجهاز غير مصرح له بالدخول</h1>
             <p className="text-sm text-slate-600 leading-relaxed">
               فقط يُسمح بتسجيل الدخول لأي جهاز يقوم بتسجيل اسم الجهاز بهذا الاسم:
-              <span className="block mt-2 font-bold text-base text-emerald-800 bg-emerald-50 border border-emerald-300 py-2 px-3 rounded-xl">
+              <span className="block mt-2.5 font-bold text-base text-emerald-800 bg-emerald-50 border border-emerald-300 py-2.5 px-3 rounded-xl">
                 «{REQUIRED_DEVICE_NAME}»
               </span>
             </p>
-            <div className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-700 mt-2">
+            <div className="text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 mt-2">
               اسم هذا الجهاز الحالي:{' '}
               <span className="font-semibold text-red-600">
                 {deviceRecord?.deviceName || deviceIdentity.deviceName}
@@ -150,7 +152,7 @@ export const LoginView: React.FC = () => {
                   setSavingDevice(false);
                 }
               }}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer shadow-xs"
+              className="ui-btn-primary w-full min-h-[46px]"
             >
               <Check className="w-4 h-4" />
               <span>
@@ -161,8 +163,9 @@ export const LoginView: React.FC = () => {
             </button>
 
             <button
+              type="button"
               onClick={logout}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>تسجيل الخروج</span>
@@ -175,10 +178,10 @@ export const LoginView: React.FC = () => {
 
   if (firebaseUser && profile && profile.status === 'suspended') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-md w-full space-y-5 text-center">
-          <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
-            <ShieldAlert className="w-6 h-6" />
+      <div className="min-h-[100dvh] bg-[#f6f8f7] flex items-center justify-center p-4 sm:p-6">
+        <div className="ui-card p-6 sm:p-8 max-w-md w-full space-y-5 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-7 h-7" />
           </div>
           <div className="space-y-2">
             <h1 className="text-xl font-bold text-slate-900">تم إيقاف هذا الحساب</h1>
@@ -187,8 +190,9 @@ export const LoginView: React.FC = () => {
             </p>
           </div>
           <button
+            type="button"
             onClick={logout}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>تسجيل الخروج</span>
@@ -200,10 +204,10 @@ export const LoginView: React.FC = () => {
 
   if (firebaseUser && profile && profile.status === 'pending') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-md w-full space-y-5 text-center">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
-            <Clock className="w-6 h-6" />
+      <div className="min-h-[100dvh] bg-[#f6f8f7] flex items-center justify-center p-4 sm:p-6">
+        <div className="ui-card p-6 sm:p-8 max-w-md w-full space-y-5 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
+            <Clock className="w-7 h-7" />
           </div>
           <div className="space-y-2">
             <h1 className="text-xl font-bold text-slate-900">بانتظار تفعيل الصلاحية</h1>
@@ -216,9 +220,11 @@ export const LoginView: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-right space-y-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-right space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-500">اسم هذا الجهاز ({deviceTypeLabel(deviceIdentity.deviceType)}):</span>
+              <span className="text-slate-500">
+                اسم هذا الجهاز ({deviceTypeLabel(deviceIdentity.deviceType)}):
+              </span>
               {!editingDevice && (
                 <button
                   type="button"
@@ -239,13 +245,13 @@ export const LoginView: React.FC = () => {
                   type="text"
                   value={deviceDraft}
                   onChange={(e) => setDeviceDraft(e.target.value)}
-                  className="flex-1 px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                  className="ui-input flex-1 text-xs"
                   placeholder="مثال: هاتف الكاشير 1"
                 />
                 <button
                   type="submit"
                   disabled={savingDevice}
-                  className="px-3 py-1.5 bg-emerald-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
+                  className="ui-btn-primary px-3.5 text-xs"
                 >
                   حفظ
                 </button>
@@ -260,8 +266,9 @@ export const LoginView: React.FC = () => {
           </div>
 
           <button
+            type="button"
             onClick={logout}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>تسجيل الخروج</span>
@@ -273,10 +280,10 @@ export const LoginView: React.FC = () => {
 
   if (firebaseUser && !profile) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-md w-full space-y-5 text-center">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
-            <Clock className="w-6 h-6" />
+      <div className="min-h-[100dvh] bg-[#f6f8f7] flex items-center justify-center p-4 sm:p-6">
+        <div className="ui-card p-6 sm:p-8 max-w-md w-full space-y-5 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
+            <Clock className="w-7 h-7" />
           </div>
           <div className="space-y-2">
             <h1 className="text-xl font-bold text-slate-900">استكمال التحقق من الحساب</h1>
@@ -288,7 +295,7 @@ export const LoginView: React.FC = () => {
               .
             </p>
             {authError && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs text-right leading-relaxed">
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs text-right leading-relaxed">
                 {authError}
               </div>
             )}
@@ -297,14 +304,14 @@ export const LoginView: React.FC = () => {
             <button
               type="button"
               onClick={retryProfileSync}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-700 text-white text-sm font-semibold rounded-lg hover:bg-emerald-800 transition-colors cursor-pointer"
+              className="ui-btn-primary w-full min-h-[44px]"
             >
               <span>إعادة التحقق والمزامنة</span>
             </button>
             <button
               type="button"
               onClick={logout}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>تسجيل الخروج</span>
@@ -316,15 +323,15 @@ export const LoginView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 flex flex-col justify-center items-center p-4 sm:p-6">
-      <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 md:p-10 space-y-6 sm:space-y-7">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
-            <Store className="w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">بقالة الحسام</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+    <div className="min-h-[100dvh] bg-[#f6f8f7] flex flex-col justify-center items-center p-4 sm:p-6">
+      <div className="w-full max-w-lg bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-8 md:p-9 space-y-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+        <div className="flex items-center gap-3.5">
+          <StoreBrandLogo storeName="بقالة الحسام" />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
+              بقالة الحسام
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
               النظام المحاسبي السحابي متعدد الأجهزة · الريال اليمني (ر.ي)
             </p>
           </div>
@@ -332,38 +339,38 @@ export const LoginView: React.FC = () => {
 
         {/* Local Device Identity Box */}
         <div
-          className={`rounded-xl p-4 space-y-3 border transition-colors ${
+          className={`rounded-2xl p-4 space-y-3 border transition-colors ${
             isCurrentNameAllowed
-              ? 'bg-emerald-50/70 border-emerald-300'
-              : 'bg-amber-50/80 border-2 border-amber-300'
+              ? 'bg-emerald-50/75 border-emerald-200'
+              : 'bg-amber-50/80 border-amber-300'
           }`}
         >
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 font-semibold">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 font-semibold min-w-0">
               <DeviceIcon
-                className={`w-4 h-4 ${
+                className={`w-4 h-4 shrink-0 ${
                   isCurrentNameAllowed ? 'text-emerald-700' : 'text-amber-700'
                 }`}
               />
               <span
                 className={
                   isCurrentNameAllowed
-                    ? 'text-emerald-950 font-bold'
-                    : 'text-slate-800 font-bold'
+                    ? 'text-emerald-950 font-bold truncate'
+                    : 'text-slate-800 font-bold truncate'
                 }
               >
                 اسم هذا الجهاز: {deviceIdentity.deviceName}
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2 shrink-0">
               {isCurrentNameAllowed ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-full">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>مصرح بالدخول ✓</span>
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>مصرح بالدخول</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
-                  <ShieldAlert className="w-3.5 h-3.5" />
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-700" />
                   <span>مطلوب اعتماد الاسم</span>
                 </span>
               )}
@@ -373,7 +380,7 @@ export const LoginView: React.FC = () => {
                   setDeviceDraft(deviceIdentity.deviceName);
                   setEditingDevice((v) => !v);
                 }}
-                className="text-emerald-700 font-semibold hover:underline cursor-pointer mr-1"
+                className="text-emerald-700 font-semibold hover:underline cursor-pointer"
               >
                 {editingDevice ? 'إلغاء' : 'تعديل'}
               </button>
@@ -381,7 +388,7 @@ export const LoginView: React.FC = () => {
           </div>
 
           {!isCurrentNameAllowed && (
-            <div className="p-3 bg-white/95 border border-amber-200 rounded-xl text-xs space-y-2.5 shadow-2xs">
+            <div className="p-3 bg-white border border-amber-200 rounded-xl text-xs space-y-2.5">
               <div className="flex items-start gap-2 text-amber-900 leading-relaxed">
                 <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
@@ -403,7 +410,7 @@ export const LoginView: React.FC = () => {
                     setSavingDevice(false);
                   }
                 }}
-                className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-xs"
+                className="ui-btn-primary w-full min-h-[44px] text-xs"
               >
                 <Check className="w-4 h-4" />
                 <span>
@@ -423,12 +430,12 @@ export const LoginView: React.FC = () => {
                   value={deviceDraft}
                   onChange={(e) => setDeviceDraft(e.target.value)}
                   placeholder={`اكتب: ${REQUIRED_DEVICE_NAME}`}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-emerald-600"
+                  className="ui-input flex-1 text-xs"
                 />
                 <button
                   type="submit"
                   disabled={savingDevice}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
+                  className="ui-btn-primary px-3.5 text-xs"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>حفظ</span>
@@ -452,25 +459,25 @@ export const LoginView: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t border-slate-100 pt-6 space-y-4">
+        <div className="border-t border-slate-100 pt-5 space-y-4">
           <div className="space-y-1.5">
-            <h2 className="text-base font-semibold text-slate-900">
+            <h2 className="text-base font-bold text-slate-900">
               تسجيل الدخول إلى النظام
             </h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               سجّل الدخول بحساب Google المعتمد للمسؤول أو الموظف للوصول إلى شاشة البيع والمخزون والمزامنة اللحظية عبر جميع الأجهزة.
             </p>
           </div>
 
           {localAuthNotice && (
-            <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs leading-relaxed flex items-start gap-2">
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs leading-relaxed flex items-start gap-2">
               <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <span>{localAuthNotice}</span>
             </div>
           )}
 
           {authError && (
-            <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm">
               {authError}
             </div>
           )}
@@ -489,11 +496,11 @@ export const LoginView: React.FC = () => {
               await signInWithGoogle();
             }}
             disabled={signingIn}
-            className={`w-full flex items-center justify-center gap-3 px-5 py-3 ${
+            className={`w-full min-h-[48px] flex items-center justify-center gap-3 px-5 py-3 ${
               isCurrentNameAllowed
-                ? 'bg-emerald-700 hover:bg-emerald-800'
+                ? 'bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900'
                 : 'bg-slate-700 hover:bg-slate-800'
-            } disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl transition-colors cursor-pointer shadow-xs`}
+            } disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl transition-colors cursor-pointer shadow-sm`}
           >
             {signingIn ? (
               <>
@@ -514,10 +521,12 @@ export const LoginView: React.FC = () => {
           </button>
         </div>
 
-        <div className="border-t border-slate-100 pt-5 grid grid-cols-3 gap-4 text-center text-xs text-slate-500">
-          <div>مزامنة سحابية فورية</div>
-          <div>حماية وتعدد أجهزة</div>
-          <div>معالجة انقطاع النت</div>
+        <div className="border-t border-slate-100 pt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-500 font-medium">
+          <span>مزامنة سحابية فورية</span>
+          <span className="text-slate-300">·</span>
+          <span>حماية وتعدد أجهزة</span>
+          <span className="text-slate-300">·</span>
+          <span>يعمل دون إنترنت</span>
         </div>
       </div>
     </div>

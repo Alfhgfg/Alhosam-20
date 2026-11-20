@@ -22,6 +22,7 @@ import {
   saleStatusLabel,
 } from '../utils/format';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
+import { PageHeader } from './UnifiedBackHeader';
 
 interface DashboardViewProps {
   onNavigate: (sec: NavSection, subTab?: string) => void;
@@ -153,11 +154,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   if (dataLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="h-24 bg-white border border-slate-200 rounded-xl animate-pulse"
+              className="h-24 ui-card animate-pulse"
             />
           ))}
         </div>
@@ -166,38 +167,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header action strip */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">
-            {isAdmin ? 'لوحة تحكم المسؤول' : 'ملخص المبيعات اليومية'}
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            متابعة لحظية للمبيعات والمخزون وحركة الموظفين في {settings.storeName}
-          </p>
-        </div>
-        <button
-          onClick={() => onNavigate('pos')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer whitespace-nowrap"
-        >
-          <span>فتح شاشة البيع السريع</span>
-          <ArrowUpRight className="w-4 h-4" />
-        </button>
-      </div>
+    <div className="space-y-5 sm:space-y-6">
+      <PageHeader
+        title={isAdmin ? 'لوحة تحكم المسؤول' : 'ملخص المبيعات اليومية'}
+        subtitle={`متابعة لحظية للمبيعات والمخزون وحركة الموظفين في ${settings.storeName}`}
+        actions={
+          <button
+            type="button"
+            onClick={() => onNavigate('pos')}
+            className="ui-btn-primary w-full sm:w-auto"
+          >
+            <span>فتح شاشة البيع السريع</span>
+            <ArrowUpRight className="w-4 h-4" />
+          </button>
+        }
+      />
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>صافي مبيعات اليوم</span>
-            <Banknote className="w-4 h-4 text-emerald-700" />
+      {/* KPI Grid — 2 columns on mobile for zero bloat, 4 on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="ui-card p-3.5 sm:p-4 space-y-2">
+          <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+            <span className="truncate">صافي مبيعات اليوم</span>
+            <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <Banknote className="w-4 h-4" />
+            </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 font-mono-num">
+          <div className="text-lg sm:text-2xl font-bold text-slate-900 font-mono-num truncate">
             {formatMoney(metrics.netTodaySales, settings.currency)}
           </div>
-          <div className="text-xs text-slate-500">
-            عدد فواتير اليوم:{' '}
+          <div className="text-[11px] sm:text-xs text-slate-500">
+            فواتير اليوم:{' '}
             <span className="font-mono-num font-semibold text-slate-800">
               {metrics.todayInvoiceCount}
             </span>
@@ -205,45 +204,53 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         </div>
 
         {canViewFinances ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>صافي الأرباح التراكمي</span>
-              <TrendingUp className="w-4 h-4 text-emerald-700" />
+          <div className="ui-card p-3.5 sm:p-4 space-y-2">
+            <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+              <span className="truncate">صافي الأرباح التراكمي</span>
+              <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-4 h-4" />
+              </span>
             </div>
-            <div className="text-2xl font-bold text-emerald-700 font-mono-num">
+            <div className="text-lg sm:text-2xl font-bold text-emerald-700 font-mono-num truncate">
               {formatMoney(metrics.netProfit, settings.currency)}
             </div>
-            <div className="text-xs text-slate-500">
-              ربح اليوم الصافي:{' '}
+            <div className="text-[11px] sm:text-xs text-slate-500 truncate">
+              ربح اليوم:{' '}
               <span className="font-mono-num font-semibold text-slate-800">
                 {formatMoney(metrics.todayProfit, settings.currency)}
               </span>
             </div>
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>فواتيري المسجلة</span>
-              <FileText className="w-4 h-4 text-slate-600" />
+          <div className="ui-card p-3.5 sm:p-4 space-y-2">
+            <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+              <span className="truncate">فواتيري المسجلة</span>
+              <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4" />
+              </span>
             </div>
-            <div className="text-2xl font-bold text-slate-900 font-mono-num">
+            <div className="text-lg sm:text-2xl font-bold text-slate-900 font-mono-num">
               {sales.length}
             </div>
-            <div className="text-xs text-slate-500">إجمالي العمليات المسجلة بحسابك</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 truncate">
+              إجمالي العمليات بحسابك
+            </div>
           </div>
         )}
 
         {canViewFinances && (
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>الصندوق النقدي</span>
-              <Wallet className="w-4 h-4 text-slate-600" />
+          <div className="ui-card p-3.5 sm:p-4 space-y-2">
+            <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+              <span className="truncate">الصندوق النقدي</span>
+              <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                <Wallet className="w-4 h-4" />
+              </span>
             </div>
-            <div className="text-2xl font-bold text-slate-900 font-mono-num">
+            <div className="text-lg sm:text-2xl font-bold text-slate-900 font-mono-num truncate">
               {formatMoney(counters.cashBalance, settings.currency)}
             </div>
-            <div className="text-xs text-slate-500">
-              إجمالي المصروفات:{' '}
+            <div className="text-[11px] sm:text-xs text-slate-500 truncate">
+              المصروفات:{' '}
               <span className="font-mono-num font-semibold text-red-700">
                 {formatMoney(metrics.totalExpenses, settings.currency)}
               </span>
@@ -251,16 +258,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
           </div>
         )}
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>قيمة المخزون (بالتكلفة)</span>
-            <Package className="w-4 h-4 text-slate-600" />
+        <div className="ui-card p-3.5 sm:p-4 space-y-2">
+          <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+            <span className="truncate">قيمة المخزون (تكلفة)</span>
+            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+              <Package className="w-4 h-4" />
+            </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 font-mono-num">
+          <div className="text-lg sm:text-2xl font-bold text-slate-900 font-mono-num truncate">
             {formatMoney(metrics.inventoryCostValue, settings.currency)}
           </div>
-          <div className="text-xs text-slate-500">
-            عدد الأصناف:{' '}
+          <div className="text-[11px] sm:text-xs text-slate-500 truncate">
+            الأصناف:{' '}
             <span className="font-mono-num font-semibold text-slate-800">
               {products.length}
             </span>{' '}
@@ -271,16 +280,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>العملاء والديون المستحقة</span>
-            <Users className="w-4 h-4 text-slate-600" />
+        <div className="ui-card p-3.5 sm:p-4 space-y-2">
+          <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+            <span className="truncate">ديون العملاء المستحقة</span>
+            <span className="w-7 h-7 rounded-lg bg-red-50 text-red-700 flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4" />
+            </span>
           </div>
-          <div className="text-2xl font-bold text-red-700 font-mono-num">
+          <div className="text-lg sm:text-2xl font-bold text-red-700 font-mono-num truncate">
             {formatMoney(metrics.customerDebts, settings.currency)}
           </div>
-          <div className="text-xs text-slate-500">
-            عدد العملاء المسجلين:{' '}
+          <div className="text-[11px] sm:text-xs text-slate-500">
+            العملاء:{' '}
             <span className="font-mono-num font-semibold text-slate-800">
               {customers.length}
             </span>
@@ -288,16 +299,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         </div>
 
         {canViewFinances && (
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>مستحقات الموردين</span>
-              <FileText className="w-4 h-4 text-slate-600" />
+          <div className="ui-card p-3.5 sm:p-4 space-y-2">
+            <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+              <span className="truncate">مستحقات الموردين</span>
+              <span className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4" />
+              </span>
             </div>
-            <div className="text-2xl font-bold text-slate-900 font-mono-num">
+            <div className="text-lg sm:text-2xl font-bold text-slate-900 font-mono-num truncate">
               {formatMoney(metrics.supplierPayables, settings.currency)}
             </div>
-            <div className="text-xs text-slate-500">
-              عدد الموردين:{' '}
+            <div className="text-[11px] sm:text-xs text-slate-500">
+              الموردون:{' '}
               <span className="font-mono-num font-semibold text-slate-800">
                 {suppliers.length}
               </span>
@@ -306,156 +319,214 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         )}
 
         {isAdmin && (
-          <div
+          <button
+            type="button"
             onClick={() => onNavigate('staff', 'devices')}
-            className="bg-white border border-slate-200 rounded-xl p-4 space-y-2 hover:border-emerald-500 transition-colors cursor-pointer"
+            className="ui-card-interactive p-3.5 sm:p-4 space-y-2 text-right cursor-pointer"
           >
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>الأجهزة المتصلة</span>
-              <MonitorSmartphone className="w-4 h-4 text-emerald-700" />
+            <div className="flex items-center justify-between gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
+              <span className="truncate">الأجهزة المتصلة</span>
+              <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <MonitorSmartphone className="w-4 h-4" />
+              </span>
             </div>
-            <div className="text-2xl font-bold text-slate-900 font-mono-num">
+            <div className="text-lg sm:text-2xl font-bold text-slate-900 font-mono-num">
               {devices.filter((d) => d.status === 'active').length}
               <span className="text-xs font-normal text-slate-400 mr-1.5">
                 / {devices.length}
               </span>
             </div>
-            <div className="text-xs text-slate-500">
+            <div className="text-[11px] sm:text-xs text-slate-500 truncate">
               محظور:{' '}
               <span className="font-mono-num font-semibold text-red-700">
                 {devices.filter((d) => d.status === 'blocked').length}
               </span>
               {pendingOperations.length > 0 && (
                 <>
-                  {' '}· معلق:{' '}
+                  {' '}
+                  · معلق:{' '}
                   <span className="font-mono-num font-semibold text-amber-700">
                     {pendingOperations.length}
                   </span>
                 </>
               )}
             </div>
-          </div>
+          </button>
         )}
       </div>
 
       {/* Alerts + Top Products + Employee Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Recent Sales Live Feed */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">آخر عمليات البيع (مباشر)</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+        <div className="lg:col-span-2 ui-card overflow-hidden">
+          <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3.5 border-b border-slate-200/80">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                آخر عمليات البيع (مباشر)
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5 truncate">
                 اضغط على أي عملية لعرض تفاصيل الفاتورة كاملة والأصناف والموظف
               </p>
             </div>
-            <span className="text-xs font-mono-num text-slate-500">
+            <span className="text-xs font-mono-num font-semibold text-slate-500 shrink-0">
               {sales.length} فاتورة
             </span>
           </div>
 
           {sales.length === 0 ? (
-            <div className="p-10 text-center space-y-3">
+            <div className="p-8 sm:p-10 text-center space-y-3">
               <p className="text-sm text-slate-500">لا توجد عمليات بيع مسجلة حتى الآن.</p>
               <button
+                type="button"
                 onClick={() => onNavigate('pos')}
-                className="px-4 py-2 bg-emerald-700 text-white text-xs font-semibold rounded-lg hover:bg-emerald-800 cursor-pointer"
+                className="ui-btn-primary text-xs"
               >
                 تسجيل أول فاتورة بيع
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
-                  <tr>
-                    <th className="text-right py-2.5 px-4 font-semibold">الفاتورة</th>
-                    <th className="text-right py-2.5 px-4 font-semibold">الموظف</th>
-                    <th className="text-right py-2.5 px-4 font-semibold">العميل</th>
-                    <th className="text-left py-2.5 px-4 font-semibold">الإجمالي</th>
-                    <th className="text-left py-2.5 px-4 font-semibold">المدفوع / المتبقي</th>
-                    <th className="text-right py-2.5 px-4 font-semibold">الحالة</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {sales.slice(0, 12).map((sale) => (
-                    <tr
-                      key={sale.id}
-                      onClick={() => setSelectedSale(sale)}
-                      className="hover:bg-slate-50 transition-colors cursor-pointer"
-                    >
-                      <td className="py-3 px-4">
-                        <div className="font-mono-num font-semibold text-slate-900">
-                          {sale.invoiceNumber}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {formatDateTime(sale.createdAt)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-slate-700">{sale.employeeName}</div>
-                        {sale.deviceName && (
-                          <div className="text-[11px] text-slate-400">
-                            {sale.deviceName}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-slate-900 font-medium">{sale.customerName}</div>
-                        <div className="text-xs text-slate-500">
-                          {sale.items.length} صنف · {paymentMethodLabel(sale.paymentMethod)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-left font-mono-num font-bold text-slate-900">
+            <>
+              {/* Mobile Card Feed */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {sales.slice(0, 12).map((sale) => (
+                  <button
+                    key={sale.id}
+                    type="button"
+                    onClick={() => setSelectedSale(sale)}
+                    className="w-full text-right p-3.5 hover:bg-slate-50 active:bg-slate-100/80 transition-colors cursor-pointer space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono-num font-bold text-sm text-slate-900">
+                        {sale.invoiceNumber}
+                      </span>
+                      <span className="font-mono-num font-bold text-sm text-emerald-700">
                         {formatMoney(sale.total, settings.currency)}
-                      </td>
-                      <td className="py-3 px-4 text-left font-mono-num text-xs">
-                        <div className="text-emerald-700 font-semibold">
-                          مدفوع: {formatMoney(sale.paidAmount, settings.currency)}
-                        </div>
-                        {sale.remainingAmount > 0 && (
-                          <div className="text-red-700">
-                            متبقي: {formatMoney(sale.remainingAmount, settings.currency)}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-xs font-medium">
-                        {sale.isOfflinePending ? (
-                          <span className="text-amber-700 font-semibold">قيد المزامنة</span>
-                        ) : (
-                          <span
-                            className={
-                              sale.status === 'cancelled'
-                                ? 'text-red-700'
-                                : sale.status === 'completed'
-                                ? 'text-emerald-700'
-                                : 'text-amber-700'
-                            }
-                          >
-                            {saleStatusLabel(sale.status)}
-                          </span>
-                        )}
-                      </td>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 text-xs text-slate-600">
+                      <span className="font-medium text-slate-800 truncate">
+                        {sale.customerName} · {sale.items.length} صنف
+                      </span>
+                      <span
+                        className={`font-semibold shrink-0 ${
+                          sale.isOfflinePending
+                            ? 'text-amber-700'
+                            : sale.status === 'cancelled'
+                            ? 'text-red-700'
+                            : sale.status === 'completed'
+                            ? 'text-emerald-700'
+                            : 'text-amber-700'
+                        }`}
+                      >
+                        {sale.isOfflinePending ? 'قيد المزامنة' : saleStatusLabel(sale.status)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
+                      <span className="truncate">
+                        {sale.employeeName} · {paymentMethodLabel(sale.paymentMethod)}
+                      </span>
+                      <span className="font-mono-num shrink-0">
+                        {formatDateTime(sale.createdAt)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50/90 border-b border-slate-200 text-xs text-slate-600">
+                    <tr>
+                      <th className="text-right py-2.5 px-4 font-semibold">الفاتورة</th>
+                      <th className="text-right py-2.5 px-4 font-semibold">الموظف</th>
+                      <th className="text-right py-2.5 px-4 font-semibold">العميل</th>
+                      <th className="text-left py-2.5 px-4 font-semibold">الإجمالي</th>
+                      <th className="text-left py-2.5 px-4 font-semibold">المدفوع / المتبقي</th>
+                      <th className="text-right py-2.5 px-4 font-semibold">الحالة</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {sales.slice(0, 12).map((sale) => (
+                      <tr
+                        key={sale.id}
+                        onClick={() => setSelectedSale(sale)}
+                        className="hover:bg-emerald-50/40 transition-colors cursor-pointer"
+                      >
+                        <td className="py-3 px-4">
+                          <div className="font-mono-num font-semibold text-slate-900">
+                            {sale.invoiceNumber}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {formatDateTime(sale.createdAt)}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-slate-700">{sale.employeeName}</div>
+                          {sale.deviceName && (
+                            <div className="text-[11px] text-slate-400">
+                              {sale.deviceName}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-slate-900 font-medium">{sale.customerName}</div>
+                          <div className="text-xs text-slate-500">
+                            {sale.items.length} صنف · {paymentMethodLabel(sale.paymentMethod)}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-left font-mono-num font-bold text-slate-900">
+                          {formatMoney(sale.total, settings.currency)}
+                        </td>
+                        <td className="py-3 px-4 text-left font-mono-num text-xs">
+                          <div className="text-emerald-700 font-semibold">
+                            مدفوع: {formatMoney(sale.paidAmount, settings.currency)}
+                          </div>
+                          {sale.remainingAmount > 0 && (
+                            <div className="text-red-700">
+                              متبقي: {formatMoney(sale.remainingAmount, settings.currency)}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-xs font-semibold">
+                          {sale.isOfflinePending ? (
+                            <span className="text-amber-700">قيد المزامنة</span>
+                          ) : (
+                            <span
+                              className={
+                                sale.status === 'cancelled'
+                                  ? 'text-red-700'
+                                  : sale.status === 'completed'
+                                  ? 'text-emerald-700'
+                                  : 'text-amber-700'
+                              }
+                            >
+                              {saleStatusLabel(sale.status)}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
         {/* Right Side: Stock Alerts & Top Products */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Low stock alerts */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200">
+          <div className="ui-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-200/80">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
                 <h2 className="text-sm font-bold text-slate-900">تنبيهات المخزون</h2>
               </div>
               <button
+                type="button"
                 onClick={() => onNavigate('inventory')}
-                className="text-xs font-medium text-emerald-700 hover:underline cursor-pointer"
+                className="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer"
               >
                 فتح المخزون
               </button>
@@ -469,16 +540,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
                 {metrics.lowStockProducts.slice(0, 8).map((p) => (
                   <div
                     key={p.id}
-                    className="px-5 py-3 flex items-center justify-between text-sm"
+                    className="px-4 sm:px-5 py-3 flex items-center justify-between gap-2 text-sm"
                   >
-                    <div>
-                      <div className="font-medium text-slate-900">{p.name}</div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-slate-900 truncate">{p.name}</div>
                       <div className="text-xs text-slate-500 font-mono-num">
                         كود: {p.code} · الحد الأدنى: {p.minStock}
                       </div>
                     </div>
                     <div
-                      className={`font-mono-num font-bold text-sm ${
+                      className={`font-mono-num font-bold text-xs sm:text-sm shrink-0 ${
                         p.stock === 0 ? 'text-red-700' : 'text-amber-700'
                       }`}
                     >
@@ -491,8 +562,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
           </div>
 
           {/* Top selling products */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-slate-200">
+          <div className="ui-card overflow-hidden">
+            <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200/80">
               <h2 className="text-sm font-bold text-slate-900">الأصناف الأكثر مبيعاً</h2>
             </div>
             {metrics.topProducts.length === 0 ? (
@@ -502,10 +573,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
                 {metrics.topProducts.map((tp, idx) => (
                   <div
                     key={tp.code}
-                    className="px-5 py-2.5 flex items-center justify-between text-sm"
+                    className="px-4 sm:px-5 py-2.5 flex items-center justify-between gap-2 text-sm"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-xs font-mono-num text-slate-400 w-4">
+                      <span className="text-xs font-mono-num font-semibold text-slate-400 w-4 shrink-0">
                         {idx + 1}.
                       </span>
                       <div className="truncate">
@@ -514,10 +585,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
                       </div>
                     </div>
                     <div className="text-left shrink-0">
-                      <div className="font-mono-num font-semibold text-slate-900">
+                      <div className="font-mono-num font-semibold text-slate-900 text-xs sm:text-sm">
                         {formatNumber(tp.qty)} وحدة
                       </div>
-                      <div className="text-xs font-mono-num text-slate-500">
+                      <div className="text-xs font-mono-num text-emerald-700 font-medium">
                         {formatMoney(tp.revenue, settings.currency)}
                       </div>
                     </div>
@@ -531,13 +602,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
 
       {/* Admin Only: Employee Activity & Recent Audit Alerts */}
       {isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+          <div className="ui-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-200/80">
               <h2 className="text-sm font-bold text-slate-900">نشاط الموظفين</h2>
               <button
+                type="button"
                 onClick={() => onNavigate('staff', 'staff')}
-                className="text-xs font-medium text-emerald-700 hover:underline cursor-pointer"
+                className="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer"
               >
                 إدارة الموظفين
               </button>
@@ -545,45 +617,68 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             {metrics.employeeActivity.length === 0 ? (
               <div className="p-5 text-xs text-slate-500">لا يوجد نشاط مسجل بعد.</div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
-                    <tr>
-                      <th className="text-right py-2 px-4 font-semibold">الموظف</th>
-                      <th className="text-center py-2 px-4 font-semibold">الفواتير</th>
-                      <th className="text-left py-2 px-4 font-semibold">إجمالي المبيعات</th>
-                      <th className="text-left py-2 px-4 font-semibold">آخر عملية</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {metrics.employeeActivity.map((emp) => (
-                      <tr key={emp.employeeId}>
-                        <td className="py-2.5 px-4 font-medium text-slate-900">
+              <>
+                <div className="md:hidden divide-y divide-slate-100">
+                  {metrics.employeeActivity.map((emp) => (
+                    <div
+                      key={emp.employeeId}
+                      className="p-3.5 flex items-center justify-between gap-2 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 truncate">
                           {emp.employeeName}
-                        </td>
-                        <td className="py-2.5 px-4 text-center font-mono-num">
-                          {emp.count}
-                        </td>
-                        <td className="py-2.5 px-4 text-left font-mono-num font-semibold text-emerald-700">
-                          {formatMoney(emp.total, settings.currency)}
-                        </td>
-                        <td className="py-2.5 px-4 text-left text-xs text-slate-500">
-                          {formatDateTime(emp.lastAt)}
-                        </td>
+                        </div>
+                        <div className="text-slate-500 mt-0.5">
+                          {emp.count} فاتورة · {formatDateTime(emp.lastAt)}
+                        </div>
+                      </div>
+                      <div className="font-mono-num font-bold text-emerald-700 shrink-0">
+                        {formatMoney(emp.total, settings.currency)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50/90 border-b border-slate-200 text-xs text-slate-600">
+                      <tr>
+                        <th className="text-right py-2 px-4 font-semibold">الموظف</th>
+                        <th className="text-center py-2 px-4 font-semibold">الفواتير</th>
+                        <th className="text-left py-2 px-4 font-semibold">إجمالي المبيعات</th>
+                        <th className="text-left py-2 px-4 font-semibold">آخر عملية</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {metrics.employeeActivity.map((emp) => (
+                        <tr key={emp.employeeId} className="hover:bg-slate-50/70">
+                          <td className="py-2.5 px-4 font-medium text-slate-900">
+                            {emp.employeeName}
+                          </td>
+                          <td className="py-2.5 px-4 text-center font-mono-num">
+                            {emp.count}
+                          </td>
+                          <td className="py-2.5 px-4 text-left font-mono-num font-semibold text-emerald-700">
+                            {formatMoney(emp.total, settings.currency)}
+                          </td>
+                          <td className="py-2.5 px-4 text-left text-xs text-slate-500">
+                            {formatDateTime(emp.lastAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200">
+          <div className="ui-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-200/80">
               <h2 className="text-sm font-bold text-slate-900">أحدث سجلات المراقبة والتدقيق</h2>
               <button
+                type="button"
                 onClick={() => onNavigate('staff', 'audit')}
-                className="text-xs font-medium text-emerald-700 hover:underline cursor-pointer"
+                className="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer"
               >
                 عرض السجل الكامل
               </button>
@@ -593,8 +688,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             ) : (
               <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto">
                 {auditLogs.slice(0, 8).map((log) => (
-                  <div key={log.id} className="px-5 py-2.5 text-xs space-y-0.5">
-                    <div className="flex items-center justify-between gap-2">
+                  <div key={log.id} className="px-4 sm:px-5 py-3 text-xs space-y-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-semibold text-slate-900">
                         {log.action} · {log.actorName}
                         {log.deviceName ? (
@@ -603,7 +698,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
                           </span>
                         ) : null}
                       </span>
-                      <span className="text-slate-400">{formatDateTime(log.createdAt)}</span>
+                      <span className="text-slate-400 font-mono-num">
+                        {formatDateTime(log.createdAt)}
+                      </span>
                     </div>
                     <p className="text-slate-600">{log.summary}</p>
                   </div>

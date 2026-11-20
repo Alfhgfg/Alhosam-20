@@ -263,10 +263,10 @@ export const CameraBarcodeModal: React.FC<CameraBarcodeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-xl">
+    <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="px-4 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+        <div className="px-4 py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <BackButton onClick={requestBack} compact />
             <div className="flex items-center gap-1.5 min-w-0">
@@ -278,7 +278,7 @@ export const CameraBarcodeModal: React.FC<CameraBarcodeModalProps> = ({
             <button
               type="button"
               onClick={() => setSoundEnabled((s) => !s)}
-              className="p-1.5 text-slate-600 hover:bg-slate-200/70 rounded-lg cursor-pointer"
+              className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
               title={soundEnabled ? 'كتم صوت التنبيه' : 'تفعيل صوت التنبيه'}
             >
               {soundEnabled ? (
@@ -291,7 +291,7 @@ export const CameraBarcodeModal: React.FC<CameraBarcodeModalProps> = ({
               <button
                 type="button"
                 onClick={handleCycleCamera}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 cursor-pointer"
+                className="ui-btn-secondary px-2.5 min-h-[36px] text-xs"
                 title="تبديل الكاميرا"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -302,12 +302,12 @@ export const CameraBarcodeModal: React.FC<CameraBarcodeModalProps> = ({
         </div>
 
         {/* Camera Viewport */}
-        <div className="p-4 space-y-3">
+        <div className="p-4 sm:p-5 space-y-3.5 overflow-y-auto">
           {cameras.length > 1 && (
             <select
               value={selectedCameraId}
               onChange={(e) => setSelectedCameraId(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white"
+              className="ui-input bg-white text-xs"
             >
               <option value="">الكاميرا الخلفية الافتراضية</option>
               {cameras.map((cam, idx) => (
@@ -329,14 +329,14 @@ export const CameraBarcodeModal: React.FC<CameraBarcodeModalProps> = ({
           </div>
 
           {cameraError && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs leading-relaxed">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs leading-relaxed">
               {cameraError}
             </div>
           )}
 
           {lastScanStatus && (
             <div
-              className={`p-3 rounded-xl text-xs font-semibold border flex items-center gap-2 ${
+              className={`p-3.5 rounded-xl text-xs font-semibold border flex items-center gap-2 ${
                 lastScanStatus.ok
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                   : 'bg-red-50 border-red-200 text-red-700'
@@ -347,13 +347,14 @@ export const CameraBarcodeModal: React.FC<CameraBarcodeModalProps> = ({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
             {allowContinuous ? (
-              <label className="inline-flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <label className="inline-flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={continuous}
                   onChange={(e) => setContinuous(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-700"
                 />
                 <span>مسح متتالي مستمر (إضافة عدة أصناف دون إغلاق الكاميرا)</span>
               </label>
@@ -367,7 +368,7 @@ export const CameraBarcodeModal: React.FC<CameraBarcodeModalProps> = ({
               <button
                 type="button"
                 onClick={requestBack}
-                className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg cursor-pointer"
+                className="px-4 min-h-[40px] text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl cursor-pointer whitespace-nowrap"
               >
                 إنهاء المسح
               </button>

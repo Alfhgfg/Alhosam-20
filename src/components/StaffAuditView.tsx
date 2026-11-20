@@ -56,7 +56,7 @@ import {
   resizeLogoToDataUrl,
 } from '../utils/invoicePrint';
 import { StoreBrandLogo } from './StoreBrandLogo';
-import { ModalSubPageHeader } from './UnifiedBackHeader';
+import { ModalSubPageHeader, PageHeader } from './UnifiedBackHeader';
 
 export const StaffAuditView: React.FC = () => {
   const { actorInfo, deviceIdentity } = useAuth();
@@ -480,56 +480,47 @@ export const StaffAuditView: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">
-            إدارة الموظفين وسجل التدقيق والإعدادات
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            إضافة وتعديل وإيقاف حسابات البائعين · سجل التدقيق غير القابل للتعديل · النسخ الاحتياطي
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1 p-1 bg-slate-200/70 rounded-xl max-w-full overflow-x-auto">
-          <button
-            onClick={() => setTab('staff')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0 ${
-              tab === 'staff' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-            }`}
-          >
-            الموظفون والصلاحيات ({staffUsers.length})
-            {pendingUsersCount > 0 ? ` · ${pendingUsersCount} معلق` : ''}
-          </button>
-          <button
-            onClick={() => setTab('devices')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0 ${
-              tab === 'devices' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-            }`}
-          >
-            الأجهزة والمراقبة ({devices.length})
-          </button>
-          <button
-            onClick={() => setTab('audit')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0 ${
-              tab === 'audit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-            }`}
-          >
-            سجل التدقيق ({auditLogs.length})
-          </button>
-          <button
-            onClick={() => setTab('settings')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0 ${
-              tab === 'settings' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-            }`}
-          >
-            الإعدادات والنسخ الاحتياطي
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="الموظفون والأجهزة والتدقيق"
+        subtitle="إضافة وتعديل وإيقاف حسابات البائعين · سجل التدقيق غير القابل للتعديل · الإعدادات والنسخ الاحتياطي"
+        actions={
+          <div className="ui-segmented">
+            <button
+              type="button"
+              onClick={() => setTab('staff')}
+              className={`ui-segmented-btn ${tab === 'staff' ? 'is-active' : ''}`}
+            >
+              الموظفون ({staffUsers.length})
+              {pendingUsersCount > 0 ? ` · ${pendingUsersCount} معلق` : ''}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('devices')}
+              className={`ui-segmented-btn ${tab === 'devices' ? 'is-active' : ''}`}
+            >
+              الأجهزة ({devices.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('audit')}
+              className={`ui-segmented-btn ${tab === 'audit' ? 'is-active' : ''}`}
+            >
+              سجل التدقيق ({auditLogs.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('settings')}
+              className={`ui-segmented-btn ${tab === 'settings' ? 'is-active' : ''}`}
+            >
+              الإعدادات والنسخ الاحتياطي
+            </button>
+          </div>
+        }
+      />
 
       {feedback && (
         <div
-          className={`p-3.5 rounded-xl text-xs border ${
+          className={`p-3.5 rounded-xl text-xs font-medium border ${
             feedback.type === 'ok'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : 'bg-red-50 border-red-200 text-red-700'
@@ -540,11 +531,11 @@ export const StaffAuditView: React.FC = () => {
       )}
 
       {tab === 'staff' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* Invite Employee Form */}
           <form
             onSubmit={handleCreateInvite}
-            className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5 space-y-4"
+            className="lg:col-span-5 ui-card p-5 space-y-4"
           >
             <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
               <UserPlus className="w-4 h-4 text-emerald-700" />
@@ -553,9 +544,9 @@ export const StaffAuditView: React.FC = () => {
               </h2>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   اسم الموظف *
                 </label>
                 <input
@@ -563,11 +554,11 @@ export const StaffAuditView: React.FC = () => {
                   type="text"
                   value={invName}
                   onChange={(e) => setInvName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="ui-input"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   البريد الإلكتروني (Google) *
                 </label>
                 <input
@@ -576,12 +567,12 @@ export const StaffAuditView: React.FC = () => {
                   value={invEmail}
                   onChange={(e) => setInvEmail(e.target.value)}
                   placeholder="employee@gmail.com"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                  className="ui-input font-mono-num"
                   dir="ltr"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   نوع الحساب
                 </label>
                 <select
@@ -589,7 +580,7 @@ export const StaffAuditView: React.FC = () => {
                   onChange={(e) =>
                     setInvRole(e.target.value as 'employee' | 'admin')
                   }
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+                  className="ui-input bg-white"
                 >
                   <option value="employee">موظف / بائع (بصلاحيات محددة)</option>
                   <option value="admin">مسؤول رئيسي (صلاحية كاملة)</option>
@@ -601,12 +592,12 @@ export const StaffAuditView: React.FC = () => {
                   <div className="text-xs font-semibold text-slate-700">
                     صلاحيات الموظف المسموحة:
                   </div>
-                  <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
                     {(Object.keys(PERMISSION_LABELS) as (keyof UserPermissions)[]).map(
                       (key) => (
                         <label
                           key={key}
-                          className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer"
+                          className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer"
                         >
                           <input
                             type="checkbox"
@@ -617,6 +608,7 @@ export const StaffAuditView: React.FC = () => {
                                 [key]: e.target.checked,
                               }))
                             }
+                            className="w-4 h-4 accent-emerald-700"
                           />
                           <span>{PERMISSION_LABELS[key]}</span>
                         </label>
@@ -630,16 +622,17 @@ export const StaffAuditView: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl cursor-pointer"
+              className="ui-btn-primary w-full text-xs"
             >
-              إضافة الموظف وتفعيل الصلاحيات
+              <UserPlus className="w-4 h-4" />
+              <span>إضافة الموظف وتفعيل الصلاحيات</span>
             </button>
           </form>
 
           {/* Users & Invites List */}
           <div className="lg:col-span-7 space-y-5">
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-slate-200">
+            <div className="ui-card overflow-hidden">
+              <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200">
                 <h2 className="text-sm font-bold text-slate-900">
                   الحسابات المسجلة ({staffUsers.length})
                 </h2>
@@ -649,21 +642,21 @@ export const StaffAuditView: React.FC = () => {
                   <div
                     key={u.id}
                     className={`p-4 flex flex-wrap items-center justify-between gap-3 ${
-                      u.status === 'pending' ? 'bg-amber-50/60' : ''
+                      u.status === 'pending' ? 'bg-amber-50/50' : ''
                     }`}
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-900 text-sm">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-bold text-slate-900 text-sm">
                           {u.displayName}
                         </span>
                         {u.status === 'pending' && (
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                            طلب انضمام معلق
+                          <span className="text-[11px] font-semibold text-amber-800">
+                            · طلب انضمام معلق
                           </span>
                         )}
                       </div>
-                      <div className="text-xs font-mono-num text-slate-500" dir="ltr">
+                      <div className="text-xs font-mono-num text-slate-500 mt-0.5 truncate" dir="ltr">
                         {u.email}
                       </div>
                       <div className="text-xs mt-1">
@@ -693,11 +686,12 @@ export const StaffAuditView: React.FC = () => {
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => openEditUser(u)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer ${
+                      className={`px-3.5 min-h-[38px] text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap ${
                         u.status === 'pending'
                           ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
-                          : 'text-slate-700 border border-slate-200 hover:bg-slate-100'
+                          : 'ui-btn-secondary'
                       }`}
                     >
                       {u.status === 'pending' ? 'اعتماد وتفعيل' : 'تعديل الصلاحيات / الحالة'}
@@ -708,8 +702,8 @@ export const StaffAuditView: React.FC = () => {
             </div>
 
             {staffInvites.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-slate-200">
+              <div className="ui-card overflow-hidden">
+                <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200">
                   <h2 className="text-sm font-bold text-slate-900">
                     دعوات الموظفين المسبقة ({staffInvites.length})
                   </h2>
@@ -718,17 +712,20 @@ export const StaffAuditView: React.FC = () => {
                   {staffInvites.map((inv) => (
                     <div
                       key={inv.id}
-                      className="p-4 flex items-center justify-between text-xs"
+                      className="p-4 flex items-center justify-between gap-3 text-xs"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <div className="font-semibold text-slate-900">{inv.name}</div>
-                        <div className="font-mono-num text-slate-500">{inv.email}</div>
+                        <div className="font-mono-num text-slate-500 truncate" dir="ltr">
+                          {inv.email}
+                        </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => {
                           if (actorInfo) deleteStaffInvite(actorInfo, inv.id, inv.email);
                         }}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl cursor-pointer shrink-0"
                         title="حذف الدعوة"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -743,8 +740,8 @@ export const StaffAuditView: React.FC = () => {
       )}
 
       {tab === 'devices' && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <div className="ui-card overflow-hidden">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <MonitorSmartphone className="w-4 h-4 text-emerald-700" />
               <h2 className="text-sm font-bold text-slate-900">
@@ -761,163 +758,305 @@ export const StaffAuditView: React.FC = () => {
               لا توجد أجهزة مسجلة بعد.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                  <tr>
-                    <th className="text-right py-2.5 px-4">الجهاز والمنصة</th>
-                    <th className="text-right py-2.5 px-4">آخر مستخدم</th>
-                    <th className="text-right py-2.5 px-4">آخر عملية</th>
-                    <th className="text-right py-2.5 px-4">آخر نشاط</th>
-                    <th className="text-right py-2.5 px-4">الحالة</th>
-                    <th className="text-center py-2.5 px-4">إجراءات التحكم</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {devices.map((dev) => {
-                    const isSelf = dev.deviceId === deviceIdentity.deviceId;
-                    const DevIcon =
-                      dev.deviceType === 'mobile'
-                        ? Smartphone
-                        : dev.deviceType === 'tablet'
-                        ? Tablet
-                        : Monitor;
-                    return (
-                      <tr
-                        key={dev.id}
-                        className={dev.status === 'blocked' ? 'bg-red-50/40' : 'hover:bg-slate-50'}
-                      >
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <DevIcon className="w-4 h-4 text-slate-600 shrink-0" />
-                            <div>
-                              <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
-                                <span>{dev.deviceName}</span>
-                                {isSelf && (
-                                  <span className="text-[11px] font-semibold text-emerald-700">
-                                    (هذا الجهاز)
-                                  </span>
-                                )}
-                                {isAllowedDeviceName(dev.deviceName) ? (
-                                  <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                                    اسم معتمد
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                                    اسم غير معتمد
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-slate-500">
-                                {deviceTypeLabel(dev.deviceType)} · {dev.platform}
-                              </div>
+            <>
+              {/* Mobile Device Cards */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {devices.map((dev) => {
+                  const isSelf = dev.deviceId === deviceIdentity.deviceId;
+                  const DevIcon =
+                    dev.deviceType === 'mobile'
+                      ? Smartphone
+                      : dev.deviceType === 'tablet'
+                      ? Tablet
+                      : Monitor;
+                  return (
+                    <div
+                      key={dev.id}
+                      className={`p-4 space-y-3 ${dev.status === 'blocked' ? 'bg-red-50/40' : ''}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                            <DevIcon className="w-4.5 h-4.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 text-sm flex flex-wrap items-center gap-1.5">
+                              <span className="truncate">{dev.deviceName}</span>
+                              {isSelf && (
+                                <span className="text-[11px] font-semibold text-emerald-700">
+                                  (هذا الجهاز)
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              {deviceTypeLabel(dev.deviceType)} · {dev.platform}
                             </div>
                           </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-slate-900">{dev.userName}</div>
-                          <div className="text-slate-500 font-mono-num" dir="ltr">
-                            {dev.userEmail}
-                          </div>
-                          <div className="text-[11px] text-slate-500">
-                            {dev.userRole === 'admin' ? 'مسؤول' : 'موظف'}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-slate-700 max-w-xs">
-                          {dev.lastOperationSummary || '—'}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
-                          {formatDateTime(dev.lastActiveAt)}
-                        </td>
-                        <td className="py-3 px-4">
+                        </div>
+                        <span
+                          className={`text-xs font-bold shrink-0 ${
+                            dev.status === 'active' ? 'text-emerald-700' : 'text-red-700'
+                          }`}
+                        >
+                          {dev.status === 'active' ? 'نشط' : 'محظور'}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-slate-600 space-y-1 bg-slate-50/80 border border-slate-100 rounded-xl p-2.5">
+                        <div>
+                          <span className="text-slate-400">المستخدم: </span>
+                          <span className="font-semibold text-slate-800">{dev.userName}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">آخر عملية: </span>
+                          <span>{dev.lastOperationSummary || '—'}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+                          <span>{formatDateTime(dev.lastActiveAt)}</span>
                           <span
-                            className={`font-semibold ${
-                              dev.status === 'active' ? 'text-emerald-700' : 'text-red-700'
-                            }`}
+                            className={
+                              isAllowedDeviceName(dev.deviceName)
+                                ? 'text-emerald-700 font-semibold'
+                                : 'text-amber-700 font-semibold'
+                            }
                           >
-                            {dev.status === 'active' ? 'نشط ومسموح' : 'محظور'}
+                            {isAllowedDeviceName(dev.deviceName) ? 'اسم معتمد' : 'اسم غير معتمد'}
                           </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setRenamingDevice(dev);
-                                setRenameDevInput(dev.deviceName);
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap"
-                              title="تغيير اسم الجهاز"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                              <span>تسمية</span>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isSelf || saving}
-                              onClick={() => handleToggleDeviceStatus(dev)}
-                              className={`inline-flex items-center gap-1 px-2.5 py-1.5 border rounded-lg cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
-                                dev.status === 'blocked'
-                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                  : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRenamingDevice(dev);
+                            setRenameDevInput(dev.deviceName);
+                          }}
+                          className="flex-1 ui-btn-secondary px-3 min-h-[40px] text-xs"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>تسمية</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isSelf || saving}
+                          onClick={() => handleToggleDeviceStatus(dev)}
+                          className={`flex-1 inline-flex items-center justify-center gap-1 px-3 min-h-[40px] border text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                            dev.status === 'blocked'
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
+                          }`}
+                        >
+                          {dev.status === 'blocked' ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>تفعيل</span>
+                            </>
+                          ) : (
+                            <>
+                              <Ban className="w-3.5 h-3.5" />
+                              <span>حظر</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isSelf || saving}
+                          onClick={() => handleDeleteDevice(dev)}
+                          className="ui-btn-secondary px-2.5 min-h-[40px] min-w-[40px] text-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={isSelf ? 'لا يمكنك حذف جهازك الحالي' : 'حذف سجل الجهاز'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-50/90 border-b border-slate-200 text-slate-600">
+                    <tr>
+                      <th className="text-right py-3 px-4">الجهاز والمنصة</th>
+                      <th className="text-right py-3 px-4">آخر مستخدم</th>
+                      <th className="text-right py-3 px-4">آخر عملية</th>
+                      <th className="text-right py-3 px-4">آخر نشاط</th>
+                      <th className="text-right py-3 px-4">الحالة</th>
+                      <th className="text-center py-3 px-4">إجراءات التحكم</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {devices.map((dev) => {
+                      const isSelf = dev.deviceId === deviceIdentity.deviceId;
+                      const DevIcon =
+                        dev.deviceType === 'mobile'
+                          ? Smartphone
+                          : dev.deviceType === 'tablet'
+                          ? Tablet
+                          : Monitor;
+                      return (
+                        <tr
+                          key={dev.id}
+                          className={dev.status === 'blocked' ? 'bg-red-50/40' : 'hover:bg-slate-50/80'}
+                        >
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <DevIcon className="w-4 h-4 text-slate-600 shrink-0" />
+                              <div>
+                                <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
+                                  <span>{dev.deviceName}</span>
+                                  {isSelf && (
+                                    <span className="text-[11px] font-semibold text-emerald-700">
+                                      (هذا الجهاز)
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`text-[10px] font-semibold ${
+                                      isAllowedDeviceName(dev.deviceName)
+                                        ? 'text-emerald-700'
+                                        : 'text-amber-700'
+                                    }`}
+                                  >
+                                    · {isAllowedDeviceName(dev.deviceName) ? 'اسم معتمد' : 'اسم غير معتمد'}
+                                  </span>
+                                </div>
+                                <div className="text-slate-500">
+                                  {deviceTypeLabel(dev.deviceType)} · {dev.platform}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-slate-900">{dev.userName}</div>
+                            <div className="text-slate-500 font-mono-num" dir="ltr">
+                              {dev.userEmail}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              {dev.userRole === 'admin' ? 'مسؤول' : 'موظف'}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-slate-700 max-w-xs">
+                            {dev.lastOperationSummary || '—'}
+                          </td>
+                          <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
+                            {formatDateTime(dev.lastActiveAt)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`font-semibold ${
+                                dev.status === 'active' ? 'text-emerald-700' : 'text-red-700'
                               }`}
-                              title={isSelf ? 'لا يمكنك حظر جهازك الحالي' : undefined}
                             >
-                              {dev.status === 'blocked' ? (
-                                <>
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  <span>تفعيل</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Ban className="w-3.5 h-3.5" />
-                                  <span>حظر</span>
-                                </>
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isSelf || saving}
-                              onClick={() => handleDeleteDevice(dev)}
-                              className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                              title={isSelf ? 'لا يمكنك حذف جهازك الحالي' : 'حذف سجل الجهاز'}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                              {dev.status === 'active' ? 'نشط ومسموح' : 'محظور'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRenamingDevice(dev);
+                                  setRenameDevInput(dev.deviceName);
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap"
+                                title="تغيير اسم الجهاز"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                                <span>تسمية</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isSelf || saving}
+                                onClick={() => handleToggleDeviceStatus(dev)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 border rounded-lg cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                                  dev.status === 'blocked'
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                    : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
+                                }`}
+                                title={isSelf ? 'لا يمكنك حظر جهازك الحالي' : undefined}
+                              >
+                                {dev.status === 'blocked' ? (
+                                  <>
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    <span>تفعيل</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Ban className="w-3.5 h-3.5" />
+                                    <span>حظر</span>
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isSelf || saving}
+                                onClick={() => handleDeleteDevice(dev)}
+                                className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                title={isSelf ? 'لا يمكنك حذف جهازك الحالي' : 'حذف سجل الجهاز'}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
 
       {tab === 'audit' && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-200 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-700" />
+        <div className="ui-card overflow-hidden">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
             <h2 className="text-sm font-bold text-slate-900">
               سجل التدقيق الأمني والمحاسبي (محمي وغير قابل للتعديل أو الحذف)
             </h2>
           </div>
-          <div className="overflow-x-auto">
+
+          {/* Mobile Audit Cards */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {auditLogs.map((log) => (
+              <div key={log.id} className="p-4 space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-bold text-xs text-emerald-800">{log.action}</span>
+                  <span className="text-[11px] text-slate-400 shrink-0">
+                    {formatDateTime(log.createdAt)}
+                  </span>
+                </div>
+                <div className="text-xs font-medium text-slate-800">{log.summary}</div>
+                {log.details && (
+                  <div className="text-[11px] text-slate-500">{log.details}</div>
+                )}
+                <div className="text-[11px] text-slate-400">
+                  {log.actorName} ({log.actorRole === 'admin' ? 'مسؤول' : 'موظف'})
+                  {log.deviceName ? ` · ${log.deviceName}` : ''}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
+              <thead className="bg-slate-50/90 border-b border-slate-200 text-slate-600">
                 <tr>
-                  <th className="text-right py-2.5 px-4">التاريخ والوقت</th>
-                  <th className="text-right py-2.5 px-4">المنفذ</th>
-                  <th className="text-right py-2.5 px-4">الجهاز</th>
-                  <th className="text-right py-2.5 px-4">العملية</th>
-                  <th className="text-right py-2.5 px-4">التفاصيل</th>
+                  <th className="text-right py-3 px-4">التاريخ والوقت</th>
+                  <th className="text-right py-3 px-4">المنفذ</th>
+                  <th className="text-right py-3 px-4">الجهاز</th>
+                  <th className="text-right py-3 px-4">العملية</th>
+                  <th className="text-right py-3 px-4">التفاصيل</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {auditLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50">
+                  <tr key={log.id} className="hover:bg-slate-50/80">
                     <td className="py-2.5 px-4 text-slate-500 whitespace-nowrap">
                       {formatDateTime(log.createdAt)}
                     </td>
@@ -946,10 +1085,10 @@ export const StaffAuditView: React.FC = () => {
       )}
 
       {tab === 'settings' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           <form
             onSubmit={handleSaveSettings}
-            className="bg-white border border-slate-200 rounded-xl p-6 space-y-5"
+            className="ui-card p-5 sm:p-6 space-y-5"
           >
             <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
               بيانات المحل وتخصيص الفاتورة
@@ -974,7 +1113,7 @@ export const StaffAuditView: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 rounded-lg cursor-pointer whitespace-nowrap">
+                  <label className="ui-btn-secondary px-3 min-h-[38px] text-xs">
                     <ImagePlus className="w-3.5 h-3.5 text-emerald-700" />
                     <span>رفع شعار</span>
                     <input
@@ -1000,7 +1139,7 @@ export const StaffAuditView: React.FC = () => {
                       type="button"
                       disabled={opt.id === 'custom' && !logoDataUrl}
                       onClick={() => setLogoMode(opt.id)}
-                      className={`py-1.5 px-2 rounded-lg border font-semibold cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                      className={`py-2 px-2 rounded-xl border font-semibold cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
                         logoMode === opt.id
                           ? 'bg-emerald-700 text-white border-emerald-700'
                           : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -1013,7 +1152,7 @@ export const StaffAuditView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   اسم المحل
                 </label>
                 <input
@@ -1021,26 +1160,26 @@ export const StaffAuditView: React.FC = () => {
                   type="text"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="ui-input"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   العملة
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                   <input
                     required
                     type="text"
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input flex-1"
                   />
                   <button
                     type="button"
                     onClick={() => setCurrency('ر.ي')}
-                    className="px-3 py-2 text-xs font-semibold border border-emerald-200 bg-emerald-50 text-emerald-800 rounded-lg hover:bg-emerald-100 cursor-pointer whitespace-nowrap"
+                    className="px-3.5 min-h-[42px] text-xs font-semibold border border-emerald-200 bg-emerald-50 text-emerald-800 rounded-xl hover:bg-emerald-100 cursor-pointer whitespace-nowrap"
                   >
                     استخدام الريال اليمني (ر.ي)
                   </button>
@@ -1049,7 +1188,7 @@ export const StaffAuditView: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     رقم الهاتف
                   </label>
                   <input
@@ -1057,11 +1196,11 @@ export const StaffAuditView: React.FC = () => {
                     value={storePhone}
                     onChange={(e) => setStorePhone(e.target.value)}
                     placeholder="مثال: 777000000"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                    className="ui-input font-mono-num"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     بيانات تواصل إضافية
                   </label>
                   <input
@@ -1069,13 +1208,13 @@ export const StaffAuditView: React.FC = () => {
                     value={contactInfo}
                     onChange={(e) => setContactInfo(e.target.value)}
                     placeholder="واتساب أو خدمة العملاء"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   العنوان
                 </label>
                 <input
@@ -1083,12 +1222,12 @@ export const StaffAuditView: React.FC = () => {
                   value={storeAddress}
                   onChange={(e) => setStoreAddress(e.target.value)}
                   placeholder="المدينة - الشارع - بجانب..."
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="ui-input"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   عبارة الشكر (تذييل الفاتورة)
                 </label>
                 <input
@@ -1096,12 +1235,12 @@ export const StaffAuditView: React.FC = () => {
                   value={receiptFooter}
                   onChange={(e) => setReceiptFooter(e.target.value)}
                   placeholder="شكراً لتسوقكم من بقالة الحسام"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="ui-input"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   عبارة ترويجية أو إشعار أسفل الفاتورة (اختياري)
                 </label>
                 <input
@@ -1109,12 +1248,12 @@ export const StaffAuditView: React.FC = () => {
                   value={promoText}
                   onChange={(e) => setPromoText(e.target.value)}
                   placeholder="مثال: توصيل مجاني للطلبات فوق 10,000 ر.ي"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="ui-input"
                 />
               </div>
 
               {/* Paper Size & Display Toggles */}
-              <div className="pt-2 border-t border-slate-100 space-y-3">
+              <div className="pt-3 border-t border-slate-100 space-y-3">
                 <div>
                   <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
                     <Printer className="w-3.5 h-3.5 text-emerald-700" />
@@ -1126,7 +1265,7 @@ export const StaffAuditView: React.FC = () => {
                         key={size}
                         type="button"
                         onClick={() => setDefaultPaperSize(size)}
-                        className={`py-2 px-3 text-xs font-semibold rounded-lg border cursor-pointer whitespace-nowrap ${
+                        className={`min-h-[40px] px-3 text-xs font-semibold rounded-xl border cursor-pointer whitespace-nowrap ${
                           defaultPaperSize === size
                             ? 'bg-slate-900 text-white border-slate-900'
                             : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
@@ -1172,13 +1311,13 @@ export const StaffAuditView: React.FC = () => {
                     ].map((toggle) => (
                       <label
                         key={toggle.label}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50/70 cursor-pointer hover:border-emerald-300"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer hover:border-emerald-300"
                       >
                         <input
                           type="checkbox"
                           checked={toggle.checked}
                           onChange={(e) => toggle.onChange(e.target.checked)}
-                          className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+                          className="w-4 h-4 accent-emerald-700"
                         />
                         <span className="font-medium text-slate-700">
                           {toggle.label}
@@ -1192,13 +1331,14 @@ export const StaffAuditView: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl cursor-pointer"
+              className="ui-btn-primary w-full sm:w-auto px-6 text-sm"
             >
-              {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}</span>
             </button>
           </form>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="ui-card p-5 sm:p-6 space-y-4">
             <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
               النسخ الاحتياطي واستعادة البيانات
             </h2>
@@ -1210,13 +1350,13 @@ export const StaffAuditView: React.FC = () => {
                 type="button"
                 disabled={saving}
                 onClick={handleBackupDownload}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-4 min-h-[42px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
               >
                 <Download className="w-4 h-4" />
                 <span>تصدير نسخة احتياطية (JSON)</span>
               </button>
 
-              <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-xl cursor-pointer">
+              <label className="ui-btn-secondary px-4 text-xs">
                 <Upload className="w-4 h-4" />
                 <span>استعادة من ملف JSON</span>
                 <input
@@ -1233,19 +1373,19 @@ export const StaffAuditView: React.FC = () => {
 
       {/* Edit User Modal */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
           <form
             onSubmit={handleSaveUser}
-            className="bg-white border border-slate-200 rounded-2xl w-full max-w-md overflow-hidden shadow-xl"
+            className="bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl"
           >
             <ModalSubPageHeader
               title={`إدارة حساب: ${editingUser.displayName}`}
               onBack={requestCloseEditUser}
             />
-            <div className="p-6 space-y-4">
-              <div className="space-y-3">
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+              <div className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     الاسم
                   </label>
                   <input
@@ -1253,12 +1393,12 @@ export const StaffAuditView: React.FC = () => {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                       الدور
                     </label>
                     <select
@@ -1266,14 +1406,14 @@ export const StaffAuditView: React.FC = () => {
                       onChange={(e) =>
                         setEditRole(e.target.value as 'admin' | 'employee')
                       }
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+                      className="ui-input bg-white"
                     >
                       <option value="employee">موظف / بائع</option>
                       <option value="admin">مسؤول رئيسي</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                       الحالة
                     </label>
                     <select
@@ -1281,7 +1421,7 @@ export const StaffAuditView: React.FC = () => {
                       onChange={(e) =>
                         setEditStatus(e.target.value as 'active' | 'suspended')
                       }
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+                      className="ui-input bg-white"
                     >
                       <option value="active">نشط</option>
                       <option value="suspended">موقوف</option>
@@ -1290,12 +1430,12 @@ export const StaffAuditView: React.FC = () => {
                 </div>
 
                 {editRole === 'employee' && (
-                  <div className="space-y-1.5 border-t border-slate-100 pt-3 max-h-52 overflow-y-auto">
+                  <div className="space-y-2 border-t border-slate-100 pt-3 max-h-52 overflow-y-auto">
                     {(Object.keys(PERMISSION_LABELS) as (keyof UserPermissions)[]).map(
                       (key) => (
                         <label
                           key={key}
-                          className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer"
+                          className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer"
                         >
                           <input
                             type="checkbox"
@@ -1306,6 +1446,7 @@ export const StaffAuditView: React.FC = () => {
                                 [key]: e.target.checked,
                               }))
                             }
+                            className="w-4 h-4 accent-emerald-700"
                           />
                           <span>{PERMISSION_LABELS[key]}</span>
                         </label>
@@ -1318,9 +1459,10 @@ export const StaffAuditView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 rounded-lg cursor-pointer"
+                  className="ui-btn-primary w-full sm:w-auto px-5 text-sm"
                 >
-                  حفظ التغييرات
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>حفظ التغييرات</span>
                 </button>
               </div>
             </div>
@@ -1330,18 +1472,18 @@ export const StaffAuditView: React.FC = () => {
 
       {/* Rename Device Modal */}
       {renamingDevice && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <form
             onSubmit={handleSaveDeviceRename}
-            className="bg-white border border-slate-200 rounded-2xl w-full max-w-md overflow-hidden shadow-xl"
+            className="bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl"
           >
             <ModalSubPageHeader
               title="تغيير اسم الجهاز"
               onBack={requestCloseRenameDevice}
             />
-            <div className="p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   اسم الجهاز الجديد *
                 </label>
                 <input
@@ -1350,13 +1492,13 @@ export const StaffAuditView: React.FC = () => {
                   value={renameDevInput}
                   onChange={(e) => setRenameDevInput(e.target.value)}
                   placeholder={`اكتب: ${REQUIRED_DEVICE_NAME}`}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="ui-input"
                 />
-                <div className="flex justify-end mt-1.5">
+                <div className="flex justify-end mt-2">
                   <button
                     type="button"
                     onClick={() => setRenameDevInput(REQUIRED_DEVICE_NAME)}
-                    className="text-[11px] text-emerald-700 font-semibold hover:underline cursor-pointer"
+                    className="text-xs text-emerald-700 font-semibold hover:underline cursor-pointer"
                   >
                     تعيين الاسم المعتمد «{REQUIRED_DEVICE_NAME}»
                   </button>
@@ -1366,9 +1508,10 @@ export const StaffAuditView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 rounded-lg cursor-pointer"
+                  className="ui-btn-primary w-full sm:w-auto px-5 text-sm"
                 >
-                  حفظ الاسم
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>حفظ الاسم</span>
                 </button>
               </div>
             </div>

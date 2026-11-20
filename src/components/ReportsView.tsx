@@ -22,6 +22,7 @@ import {
 } from '../utils/format';
 import { printCurrentView } from '../utils/print';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
+import { PageHeader } from './UnifiedBackHeader';
 
 type ReportType =
   | 'sales'
@@ -739,57 +740,60 @@ export const ReportsView: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4 no-print">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">التقارير والتصدير</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            تقارير تفصيلية وجداول مالية قابلة للتصفية والتصدير إلى Excel و PDF والطباعة المباشرة
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleExportFullWorkbook}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>تصدير الكتاب المالي الشامل (Excel)</span>
-          </button>
-          <button
-            onClick={handleExportExcel}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>تصدير التقرير الحالي (Excel)</span>
-          </button>
-          <button
-            onClick={() => printCurrentView(`تقرير بقالة الحسام - ${reportType}`)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
-          >
-            <Printer className="w-4 h-4" />
-            <span>طباعة / PDF</span>
-          </button>
-        </div>
+      <div className="no-print">
+        <PageHeader
+          title="التقارير والتصدير"
+          subtitle="تقارير تفصيلية وجداول مالية قابلة للتصفية والتصدير إلى Excel و PDF والطباعة المباشرة"
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportFullWorkbook}
+                className="ui-btn-primary px-3.5 text-xs bg-emerald-800 hover:bg-emerald-900"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>الكتاب المالي الشامل (Excel)</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                className="ui-btn-primary px-3.5 text-xs"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>تصدير التقرير الحالي (Excel)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => printCurrentView(`تقرير بقالة الحسام - ${reportType}`)}
+                className="inline-flex items-center justify-center gap-1.5 px-4 min-h-[42px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
+              >
+                <Printer className="w-4 h-4" />
+                <span>طباعة / PDF</span>
+              </button>
+            </div>
+          }
+        />
       </div>
 
       {exportNotice && (
-        <div className="no-print flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800">
+        <div className="no-print flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{exportNotice}</span>
         </div>
       )}
 
       {/* Report Selector & Date Filters */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-4 no-print">
+      <div className="ui-card p-4 space-y-4 no-print">
         <div className="flex flex-wrap gap-1.5">
           {reportTabs.map((t) => (
             <button
               key={t.id}
+              type="button"
               onClick={() => setReportType(t.id)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+              className={`px-3.5 min-h-[38px] text-xs font-semibold rounded-xl transition-colors cursor-pointer whitespace-nowrap ${
                 reportType === t.id
-                  ? 'bg-emerald-700 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80'
               }`}
             >
               {t.label}
@@ -797,23 +801,23 @@ export const ReportsView: React.FC = () => {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 text-xs">
+        <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100 text-xs">
           <div className="flex items-center gap-2">
-            <label className="text-slate-600">من تاريخ:</label>
+            <label className="text-slate-600 font-medium">من تاريخ:</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg font-mono-num"
+              className="px-3 py-2 min-h-[40px] border border-slate-200 rounded-xl font-mono-num bg-white"
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-slate-600">إلى تاريخ:</label>
+            <label className="text-slate-600 font-medium">إلى تاريخ:</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="px-2.5 py-1.5 border border-slate-200 rounded-lg font-mono-num"
+              className="px-3 py-2 min-h-[40px] border border-slate-200 rounded-xl font-mono-num bg-white"
             />
           </div>
           {reportType === 'item_movements' && (
@@ -822,17 +826,18 @@ export const ReportsView: React.FC = () => {
               value={codeFilter}
               onChange={(e) => setCodeFilter(e.target.value)}
               placeholder="تصفية بكود الصنف أو اسمه..."
-              className="px-3 py-1.5 border border-slate-200 rounded-lg min-w-[220px]"
+              className="px-3 py-2 min-h-[40px] border border-slate-200 rounded-xl min-w-[220px] bg-white"
             />
           )}
           {(dateFrom || dateTo || codeFilter) && (
             <button
+              type="button"
               onClick={() => {
                 setDateFrom('');
                 setDateTo('');
                 setCodeFilter('');
               }}
-              className="text-red-600 hover:underline cursor-pointer"
+              className="text-red-600 hover:underline font-semibold cursor-pointer px-2 py-1"
             >
               مسح التصفية
             </button>
@@ -841,14 +846,14 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* Printable Report Sheet */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 print-container">
+      <div className="ui-card p-4 sm:p-5 space-y-4 print-container">
         <div className="border-b border-slate-200 pb-3 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900">
               {settings.storeName} ·{' '}
               {reportTabs.find((x) => x.id === reportType)?.label}
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mt-0.5">
               تاريخ التقرير: {new Date().toLocaleDateString('ar-EG')}
               {dateFrom || dateTo ? ` · الفترة: ${dateFrom || '...'} إلى ${dateTo || '...'}` : ''}
             </p>

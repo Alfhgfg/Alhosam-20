@@ -251,14 +251,14 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
   const modalContent = (
     <div
       id="invoice-print-root"
-      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={`فاتورة بيع رقم ${sale.invoiceNumber}`}
     >
       <style>{pagePrintStyle}</style>
 
-      <div className="invoice-modal-shell bg-slate-100 border border-slate-300 rounded-2xl w-full max-w-4xl max-h-[95dvh] flex flex-col overflow-hidden shadow-2xl">
+      <div className="invoice-modal-shell bg-slate-100 border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-4xl max-h-[94dvh] flex flex-col overflow-hidden shadow-2xl">
         {/* Top Action & Paper Toolbar (no-print) */}
         <div className="bg-white border-b border-slate-200 px-3.5 sm:px-5 py-3 flex flex-col gap-2.5 no-print shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-2.5">
@@ -270,7 +270,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                     فاتورة بيع #{sale.invoiceNumber}
                   </h3>
                   <span
-                    className={`text-[11px] font-bold px-2 py-0.5 rounded border ${statusStyleClasses(
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${statusStyleClasses(
                       sale.status
                     )}`}
                   >
@@ -288,7 +288,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() => setCustomizeOpen((v) => !v)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border cursor-pointer whitespace-nowrap shrink-0 transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 min-h-[38px] text-xs font-medium rounded-xl border cursor-pointer whitespace-nowrap shrink-0 transition-colors ${
                   customizeOpen
                     ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -301,7 +301,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
               <button
                 type="button"
                 onClick={handleCopyShare}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 min-h-[38px] text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer whitespace-nowrap shrink-0"
               >
                 {copied ? (
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -314,7 +314,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
               <button
                 type="button"
                 onClick={handlePrint}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 rounded-lg hover:bg-emerald-800 cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 min-h-[38px] text-xs font-semibold text-white bg-emerald-700 rounded-xl hover:bg-emerald-800 cursor-pointer whitespace-nowrap shrink-0"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>طباعة / PDF</span>
@@ -323,8 +323,8 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
           </div>
 
           {/* Quick Paper Size Switcher */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[11px] font-semibold text-slate-500 ml-1">
                 حجم الورق:
               </span>
@@ -335,7 +335,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                     key={size}
                     type="button"
                     onClick={() => updatePref('paperSize', size)}
-                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border cursor-pointer whitespace-nowrap shrink-0 transition-colors ${
+                    className={`px-3 min-h-[34px] text-[11px] font-semibold rounded-xl border cursor-pointer whitespace-nowrap shrink-0 transition-colors ${
                       active
                         ? 'bg-slate-900 text-white border-slate-900'
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
@@ -348,12 +348,12 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
             </div>
 
             {showProfit && (
-              <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 cursor-pointer select-none">
+              <label className="inline-flex items-center gap-2 text-[11px] font-medium text-slate-600 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={printProfit}
                   onChange={(e) => setPrintProfit(e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+                  className="w-4 h-4 accent-emerald-700"
                 />
                 <span>تضمين صافي الربح في الطباعة</span>
               </label>
@@ -362,16 +362,16 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
 
           {/* Inline Customization Drawer */}
           {customizeOpen && (
-            <div className="mt-1 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <div className="mt-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-800">
                   خيارات عرض الفاتورة والطباعة
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={handleResetPrefs}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-md cursor-pointer whitespace-nowrap"
+                    className="inline-flex items-center gap-1 px-2.5 min-h-[34px] text-[11px] font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl cursor-pointer whitespace-nowrap"
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>استعادة الافتراضي</span>
@@ -381,7 +381,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                       type="button"
                       disabled={savingDefaults}
                       onClick={handleSaveAsStoreDefaults}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md cursor-pointer whitespace-nowrap disabled:opacity-60"
+                      className="inline-flex items-center gap-1 px-3 min-h-[34px] text-[11px] font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl cursor-pointer whitespace-nowrap disabled:opacity-60"
                     >
                       <Save className="w-3 h-3" />
                       <span>
@@ -406,13 +406,13 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                 ).map((item) => (
                   <label
                     key={item.key}
-                    className="flex items-center gap-2 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-emerald-300"
+                    className="flex items-center gap-2 px-2.5 py-2 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-emerald-300"
                   >
                     <input
                       type="checkbox"
                       checked={prefs[item.key]}
                       onChange={(e) => updatePref(item.key, e.target.checked)}
-                      className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+                      className="w-4 h-4 accent-emerald-700"
                     />
                     <span className="text-slate-700 font-medium">
                       {item.label}
@@ -422,7 +422,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
               </div>
 
               {saveNotice && (
-                <div className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5">
+                <div className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
                   {saveNotice}
                 </div>
               )}

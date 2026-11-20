@@ -36,7 +36,7 @@ import {
 } from '../utils/format';
 import { BarcodeGraphic, ProductBarcodeCard } from './BarcodeGraphic';
 import { CameraBarcodeModal } from './CameraBarcodeModal';
-import { ModalSubPageHeader } from './UnifiedBackHeader';
+import { ModalSubPageHeader, PageHeader } from './UnifiedBackHeader';
 
 export const ProductsView: React.FC = () => {
   const { actorInfo, isAdmin, hasPermission } = useAuth();
@@ -450,46 +450,49 @@ export const ProductsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">إدارة الأصناف والباركود</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            باركود فريد لكل صنف · توليد تلقائي أو مسح بالكاميرا والماسح الضوئي · طباعة وحفظ الملصقات
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {canManage && productsMissingBarcode.length > 0 && (
-            <button
-              type="button"
-              disabled={generatingBulk}
-              onClick={handleBulkGenerateMissingBarcodes}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 text-xs font-semibold rounded-xl transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <ScanBarcode className="w-4 h-4" />
-              <span>
-                {generatingBulk
-                  ? 'جاري توليد الباركود...'
-                  : `توليد باركود تلقائي (${productsMissingBarcode.length} صنف)`}
-              </span>
-            </button>
-          )}
-          {canManage && (
-            <button
-              onClick={openAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" />
-              <span>إضافة صنف جديد</span>
-            </button>
-          )}
-        </div>
-      </div>
+    <div className="space-y-4 sm:space-y-5">
+      <PageHeader
+        title="إدارة الأصناف والباركود"
+        subtitle="باركود فريد لكل صنف · توليد تلقائي أو مسح بالكاميرا والماسح الضوئي · طباعة وحفظ الملصقات"
+        actions={
+          <>
+            {canManage && productsMissingBarcode.length > 0 && (
+              <button
+                type="button"
+                disabled={generatingBulk}
+                onClick={handleBulkGenerateMissingBarcodes}
+                className="ui-btn-secondary border-emerald-300 text-emerald-800 hover:bg-emerald-50 text-xs flex-1 sm:flex-none"
+              >
+                <ScanBarcode className="w-4 h-4" />
+                <span>
+                  {generatingBulk
+                    ? 'جاري توليد الباركود...'
+                    : `توليد باركود تلقائي (${productsMissingBarcode.length} صنف)`}
+                </span>
+              </button>
+            )}
+            {canManage && (
+              <button
+                type="button"
+                onClick={openAddModal}
+                className="ui-btn-primary flex-1 sm:flex-none"
+              >
+                <Plus className="w-4 h-4" />
+                <span>إضافة صنف جديد</span>
+              </button>
+            )}
+          </>
+        }
+      />
 
       {successMsg && (
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between gap-2">
           <span>{successMsg}</span>
-          <button type="button" onClick={() => setSuccessMsg(null)} className="cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setSuccessMsg(null)}
+            className="p-1 rounded-lg hover:bg-emerald-100 cursor-pointer shrink-0"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -498,47 +501,53 @@ export const ProductsView: React.FC = () => {
       {errorMsg && !modalOpen && (
         <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between gap-2">
           <span>{errorMsg}</span>
-          <button type="button" onClick={() => setErrorMsg(null)} className="cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setErrorMsg(null)}
+            className="p-1 rounded-lg hover:bg-red-100 cursor-pointer shrink-0"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="ui-card p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-[240px]">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالباركود أو الكود أو اسم الصنف أو التصنيف..."
-              className="w-full pr-9 pl-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600"
+              className="ui-input pr-10"
             />
           </div>
           <button
             type="button"
             onClick={() => setCameraMode('search')}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-lg shrink-0 cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 min-h-[42px] text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-xl shrink-0 cursor-pointer whitespace-nowrap"
             title="البحث بمسح الباركود بالكاميرا"
           >
             <Camera className="w-4 h-4" />
             <span>مسح للبحث</span>
           </button>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
+        <div className="ui-segmented">
           <button
+            type="button"
             onClick={() => setFilterMode('all')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md cursor-pointer ${
+            className={`ui-segmented-btn ${
               filterMode === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
             }`}
           >
             جميع الأصناف ({products.length})
           </button>
           <button
+            type="button"
             onClick={() => setFilterMode('low')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md cursor-pointer ${
+            className={`ui-segmented-btn ${
               filterMode === 'low' ? 'bg-white text-amber-700 shadow-xs' : 'text-slate-600'
             }`}
           >
@@ -547,153 +556,269 @@ export const ProductsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      {/* Products List (Mobile Cards + Desktop Table) */}
+      <div className="ui-card overflow-hidden">
         {filteredProducts.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
+          <div className="p-10 text-center space-y-3">
             <p className="text-sm text-slate-500">لا توجد أصناف مطابقة للبحث أو الفلتر.</p>
             {canManage && products.length === 0 && (
               <button
+                type="button"
                 onClick={openAddModal}
-                className="px-4 py-2 bg-emerald-700 text-white text-xs font-semibold rounded-lg hover:bg-emerald-800 cursor-pointer"
+                className="ui-btn-primary text-xs"
               >
                 إضافة أول صنف
               </button>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
-                <tr>
-                  <th className="text-right py-3 px-4 font-semibold">الكود / الباركود</th>
-                  <th className="text-right py-3 px-4 font-semibold">الصنف والتصنيف</th>
-                  {isAdmin && (
-                    <th className="text-left py-3 px-4 font-semibold">سعر الشراء</th>
-                  )}
-                  <th className="text-left py-3 px-4 font-semibold">سعر البيع</th>
-                  <th className="text-center py-3 px-4 font-semibold">الكمية الحالية</th>
-                  <th className="text-center py-3 px-4 font-semibold">الحد الأدنى</th>
-                  <th className="text-right py-3 px-4 font-semibold">الحالة</th>
-                  <th className="text-center py-3 px-4 font-semibold">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredProducts.map((p) => {
-                  const isLow = p.stock <= p.minStock;
-                  return (
-                    <tr
-                      key={p.id}
-                      onClick={() => setDetailProduct(p)}
-                      className="hover:bg-slate-50 cursor-pointer"
-                    >
-                      <td className="py-3 px-4 font-mono-num">
-                        <div className="font-semibold text-slate-900">{p.code}</div>
+          <>
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {filteredProducts.map((p) => {
+                const isLow = p.stock <= p.minStock;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => setDetailProduct(p)}
+                    className="p-3.5 hover:bg-slate-50 active:bg-slate-100/70 transition-colors cursor-pointer space-y-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 text-sm truncate">
+                          {p.name}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {p.category} · {p.unit} ·{' '}
+                          <span className="font-mono-num text-slate-700">{p.code}</span>
+                        </div>
                         {p.barcode ? (
-                          <div className="inline-flex items-center gap-1 text-xs text-emerald-700 mt-0.5" dir="ltr">
+                          <div
+                            className="inline-flex items-center gap-1 text-[11px] font-mono-num text-emerald-700 mt-1"
+                            dir="ltr"
+                          >
                             <ScanBarcode className="w-3 h-3 shrink-0" />
                             <span>{p.barcode}</span>
                           </div>
                         ) : (
-                          <div className="text-[11px] text-amber-700 mt-0.5">
-                            بدون باركود
-                          </div>
+                          <div className="text-[11px] text-amber-700 mt-1">بدون باركود</div>
                         )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-semibold text-slate-900">{p.name}</div>
-                        <div className="text-xs text-slate-500">
-                          {p.category} · {p.unit}
+                      </div>
+                      <div className="text-left shrink-0">
+                        <div className="font-mono-num font-bold text-emerald-700 text-sm">
+                          {formatMoney(p.sellPrice, settings.currency)}
                         </div>
-                      </td>
-                      {isAdmin && (
-                        <td className="py-3 px-4 text-left font-mono-num text-slate-700">
-                          {formatMoney(p.costPrice, settings.currency)}
-                        </td>
-                      )}
-                      <td className="py-3 px-4 text-left font-mono-num font-bold text-emerald-700">
-                        {formatMoney(p.sellPrice, settings.currency)}
-                      </td>
-                      <td className="py-3 px-4 text-center font-mono-num font-semibold">
-                        <span
-                          className={
+                        <div
+                          className={`text-xs font-mono-num font-semibold mt-0.5 ${
                             p.stock === 0
                               ? 'text-red-700'
                               : isLow
                               ? 'text-amber-700'
-                              : 'text-slate-900'
-                          }
+                              : 'text-slate-600'
+                          }`}
                         >
-                          {formatNumber(p.stock)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-center font-mono-num text-slate-500">
-                        {formatNumber(p.minStock)}
-                      </td>
-                      <td className="py-3 px-4 text-xs">
-                        {!p.isActive ? (
-                          <span className="text-slate-500">موقوف</span>
-                        ) : p.stock === 0 ? (
-                          <span className="text-red-700 font-semibold">نفد المخزون</span>
-                        ) : isLow ? (
-                          <span className="text-amber-700 font-semibold">مخزون منخفض</span>
-                        ) : (
-                          <span className="text-emerald-700 font-medium">متوفر</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setDetailProduct(p)}
-                            className="p-1.5 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg cursor-pointer"
-                            title="عرض تفاصيل الصنف والباركود"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDetailProduct(p)}
-                            className="p-1.5 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg cursor-pointer"
-                            title="طباعة / حفظ باركود الصنف"
-                          >
-                            <Printer className="w-4 h-4" />
-                          </button>
-                          {canManage && (
-                            <button
-                              type="button"
-                              onClick={() => openEditModal(p)}
-                              className="p-1.5 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg cursor-pointer"
-                              title="تعديل"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                          )}
-                          {canManage && isAdmin && (
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(p)}
-                              className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer"
-                              title="حذف"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                          الكمية: {formatNumber(p.stock)}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+
+                    <div
+                      className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span
+                        className={`text-xs font-semibold ${
+                          !p.isActive
+                            ? 'text-slate-500'
+                            : p.stock === 0
+                            ? 'text-red-700'
+                            : isLow
+                            ? 'text-amber-700'
+                            : 'text-emerald-700'
+                        }`}
+                      >
+                        {!p.isActive
+                          ? 'موقوف'
+                          : p.stock === 0
+                          ? 'نفد المخزون'
+                          : isLow
+                          ? 'مخزون منخفض'
+                          : 'متوفر'}
+                      </span>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setDetailProduct(p)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[36px] text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>باركود</span>
+                        </button>
+                        {canManage && (
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(p)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[36px] text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            <span>تعديل</span>
+                          </button>
+                        )}
+                        {canManage && isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(p)}
+                            className="p-2 min-h-[36px] text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                            aria-label="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50/90 border-b border-slate-200 text-xs text-slate-600">
+                  <tr>
+                    <th className="text-right py-3 px-4 font-semibold">الكود / الباركود</th>
+                    <th className="text-right py-3 px-4 font-semibold">الصنف والتصنيف</th>
+                    {isAdmin && (
+                      <th className="text-left py-3 px-4 font-semibold">سعر الشراء</th>
+                    )}
+                    <th className="text-left py-3 px-4 font-semibold">سعر البيع</th>
+                    <th className="text-center py-3 px-4 font-semibold">الكمية الحالية</th>
+                    <th className="text-center py-3 px-4 font-semibold">الحد الأدنى</th>
+                    <th className="text-right py-3 px-4 font-semibold">الحالة</th>
+                    <th className="text-center py-3 px-4 font-semibold">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredProducts.map((p) => {
+                    const isLow = p.stock <= p.minStock;
+                    return (
+                      <tr
+                        key={p.id}
+                        onClick={() => setDetailProduct(p)}
+                        className="hover:bg-emerald-50/35 transition-colors cursor-pointer"
+                      >
+                        <td className="py-3 px-4 font-mono-num">
+                          <div className="font-semibold text-slate-900">{p.code}</div>
+                          {p.barcode ? (
+                            <div
+                              className="inline-flex items-center gap-1 text-xs text-emerald-700 mt-0.5"
+                              dir="ltr"
+                            >
+                              <ScanBarcode className="w-3 h-3 shrink-0" />
+                              <span>{p.barcode}</span>
+                            </div>
+                          ) : (
+                            <div className="text-[11px] text-amber-700 mt-0.5">
+                              بدون باركود
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-slate-900">{p.name}</div>
+                          <div className="text-xs text-slate-500">
+                            {p.category} · {p.unit}
+                          </div>
+                        </td>
+                        {isAdmin && (
+                          <td className="py-3 px-4 text-left font-mono-num text-slate-700">
+                            {formatMoney(p.costPrice, settings.currency)}
+                          </td>
+                        )}
+                        <td className="py-3 px-4 text-left font-mono-num font-bold text-emerald-700">
+                          {formatMoney(p.sellPrice, settings.currency)}
+                        </td>
+                        <td className="py-3 px-4 text-center font-mono-num font-semibold">
+                          <span
+                            className={
+                              p.stock === 0
+                                ? 'text-red-700'
+                                : isLow
+                                ? 'text-amber-700'
+                                : 'text-slate-900'
+                            }
+                          >
+                            {formatNumber(p.stock)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center font-mono-num text-slate-500">
+                          {formatNumber(p.minStock)}
+                        </td>
+                        <td className="py-3 px-4 text-xs">
+                          {!p.isActive ? (
+                            <span className="text-slate-500">موقوف</span>
+                          ) : p.stock === 0 ? (
+                            <span className="text-red-700 font-semibold">نفد المخزون</span>
+                          ) : isLow ? (
+                            <span className="text-amber-700 font-semibold">مخزون منخفض</span>
+                          ) : (
+                            <span className="text-emerald-700 font-medium">متوفر</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setDetailProduct(p)}
+                              className="p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg cursor-pointer"
+                              title="عرض تفاصيل الصنف والباركود"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDetailProduct(p)}
+                              className="p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg cursor-pointer"
+                              title="طباعة / حفظ باركود الصنف"
+                            >
+                              <Printer className="w-4 h-4" />
+                            </button>
+                            {canManage && (
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(p)}
+                                className="p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg cursor-pointer"
+                                title="تعديل"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canManage && isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(p)}
+                                className="p-2 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer"
+                                title="حذف"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
       {/* Product Detail Modal */}
       {liveDetailProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl overflow-hidden shadow-xl">
+        <div className="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-2xl max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl">
             <ModalSubPageHeader
               title={`تفاصيل الصنف: ${liveDetailProduct.name}`}
               subtitle={`كود: ${liveDetailProduct.code}${
@@ -705,7 +830,7 @@ export const ProductsView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => openEditModal(liveDetailProduct)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg cursor-pointer"
+                    className="ui-btn-primary text-xs min-h-[38px] px-3 py-1.5"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                     <span>تعديل البيانات</span>
@@ -714,7 +839,7 @@ export const ProductsView: React.FC = () => {
               }
             />
 
-            <div className="p-6 space-y-5 max-h-[82dvh] overflow-y-auto">
+            <div className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <div className="text-slate-500">التصنيف والوحدة</div>
@@ -785,7 +910,7 @@ export const ProductsView: React.FC = () => {
                       type="button"
                       disabled={generatingDetailBarcode}
                       onClick={() => handleAssignDetailBarcode(liveDetailProduct)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap"
+                      className="ui-btn-primary text-xs min-h-[38px]"
                     >
                       <ScanBarcode className="w-4 h-4" />
                       <span>
@@ -863,10 +988,10 @@ export const ProductsView: React.FC = () => {
 
       {/* Add/Edit Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <form
             onSubmit={handleSave}
-            className="bg-white border border-slate-200 rounded-2xl w-full max-w-xl overflow-hidden shadow-xl"
+            className="bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-xl max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl"
           >
             <ModalSubPageHeader
               title={
@@ -877,17 +1002,17 @@ export const ProductsView: React.FC = () => {
               onBack={requestCloseProductModal}
             />
 
-            <div className="p-6 space-y-4 max-h-[82dvh] overflow-y-auto">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {errorMsg && (
-                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
                   {errorMsg}
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {!editingProduct && (
-                  <div className="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
                       <label className="text-xs font-semibold text-slate-700">
                         كود الصنف الفريد
                       </label>
@@ -907,7 +1032,7 @@ export const ProductsView: React.FC = () => {
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                         placeholder="مثال: PROD-101 (حروف إنجليزية وأرقام فقط)"
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white font-mono-num"
+                        className="ui-input font-mono-num"
                         dir="ltr"
                       />
                     )}
@@ -924,7 +1049,7 @@ export const ProductsView: React.FC = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="مثال: أرز بسمتي 5 كيلو"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
 
@@ -937,7 +1062,7 @@ export const ProductsView: React.FC = () => {
                     type="text"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
 
@@ -951,7 +1076,7 @@ export const ProductsView: React.FC = () => {
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
                     placeholder="حبة / كرتون / كيلو"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
 
@@ -966,7 +1091,7 @@ export const ProductsView: React.FC = () => {
                     step="0.01"
                     value={costPrice}
                     onChange={(e) => setCostPrice(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                    className="ui-input font-mono-num"
                   />
                 </div>
 
@@ -981,7 +1106,7 @@ export const ProductsView: React.FC = () => {
                     step="0.01"
                     value={sellPrice}
                     onChange={(e) => setSellPrice(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                    className="ui-input font-mono-num"
                   />
                 </div>
 
@@ -997,7 +1122,7 @@ export const ProductsView: React.FC = () => {
                       step="any"
                       value={stock}
                       onChange={(e) => setStock(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                      className="ui-input font-mono-num"
                     />
                   </div>
                 )}
@@ -1013,7 +1138,7 @@ export const ProductsView: React.FC = () => {
                     step="any"
                     value={minStock}
                     onChange={(e) => setMinStock(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                    className="ui-input font-mono-num"
                   />
                 </div>
 
@@ -1028,7 +1153,7 @@ export const ProductsView: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                     <input
                       ref={barcodeInputRef}
                       type="text"
@@ -1041,17 +1166,17 @@ export const ProductsView: React.FC = () => {
                         }
                       }}
                       placeholder="امسح أو اكتب الباركود، أو اضغط توليد تلقائي..."
-                      className={`w-full px-3 py-2 text-sm bg-white border rounded-lg font-mono-num ${
+                      className={`ui-input font-mono-num ${
                         barcodeConflict || !barcodeFormatValid
                           ? 'border-red-400 focus:border-red-600'
-                          : 'border-slate-200 focus:border-emerald-600'
+                          : ''
                       }`}
                       dir="ltr"
                     />
                     <button
                       type="button"
                       onClick={handleGenerateBarcodeInForm}
-                      className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg shrink-0 cursor-pointer whitespace-nowrap"
+                      className="ui-btn-secondary text-xs min-h-[42px] px-3"
                       title="إنشاء باركود EAN-13 فريد تلقائياً"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
@@ -1060,7 +1185,7 @@ export const ProductsView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setCameraMode('form')}
-                      className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-lg shrink-0 cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-xl shrink-0 cursor-pointer whitespace-nowrap"
                       title="التقاط الباركود بالكاميرا"
                     >
                       <Camera className="w-4 h-4" />
@@ -1090,7 +1215,7 @@ export const ProductsView: React.FC = () => {
                   {normalizedFormBarcode &&
                     barcodeFormatValid &&
                     !barcodeConflict && (
-                      <div className="bg-white border border-slate-200 rounded-lg p-2.5 max-w-[230px] mx-auto">
+                      <div className="bg-white border border-slate-200 rounded-xl p-2.5 max-w-[230px] mx-auto">
                         <BarcodeGraphic
                           value={normalizedFormBarcode}
                           height={42}
@@ -1108,7 +1233,7 @@ export const ProductsView: React.FC = () => {
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className="ui-input"
                   />
                 </div>
 
@@ -1128,7 +1253,7 @@ export const ProductsView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={saving || Boolean(barcodeConflict) || !barcodeFormatValid}
-                  className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 rounded-lg cursor-pointer"
+                  className="ui-btn-primary w-full sm:w-auto text-xs"
                 >
                   {saving ? 'جاري الحفظ...' : 'حفظ البيانات'}
                 </button>
@@ -1177,4 +1302,3 @@ export const ProductsView: React.FC = () => {
     </div>
   );
 };
-

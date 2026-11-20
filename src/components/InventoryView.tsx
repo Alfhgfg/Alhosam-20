@@ -16,6 +16,7 @@ import {
   movementTypeLabel,
 } from '../utils/format';
 import { CameraBarcodeModal } from './CameraBarcodeModal';
+import { PageHeader } from './UnifiedBackHeader';
 
 export const InventoryView: React.FC = () => {
   const { actorInfo, isAdmin, hasPermission } = useAuth();
@@ -188,64 +189,64 @@ export const InventoryView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">إدارة المخزون والجرد</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            متابعة الكميات · البحث والجرد بالباركود · سجل حركة كل صنف بالكود والباركود
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1 p-1 bg-slate-200/70 rounded-xl max-w-full overflow-x-auto">
-          <button
-            onClick={() => setTab('levels')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0 ${
-              tab === 'levels' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-            }`}
-          >
-            أرصدة المخزون
-          </button>
-          {canStocktake && (
+    <div className="space-y-4 sm:space-y-5">
+      <PageHeader
+        title="إدارة المخزون والجرد"
+        subtitle="متابعة الكميات · البحث والجرد بالباركود · سجل حركة كل صنف بالكود والباركود"
+        actions={
+          <div className="ui-segmented">
             <button
-              onClick={() => setTab('stocktake')}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0 ${
-                tab === 'stocktake'
+              type="button"
+              onClick={() => setTab('levels')}
+              className={`ui-segmented-btn ${
+                tab === 'levels' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+              }`}
+            >
+              أرصدة المخزون
+            </button>
+            {canStocktake && (
+              <button
+                type="button"
+                onClick={() => setTab('stocktake')}
+                className={`ui-segmented-btn ${
+                  tab === 'stocktake'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600'
+                }`}
+              >
+                الجرد والوارد/المنصرف
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setTab('movements')}
+              className={`ui-segmented-btn ${
+                tab === 'movements'
                   ? 'bg-white text-slate-900 shadow-xs'
                   : 'text-slate-600'
               }`}
             >
-              الجرد والوارد/المنصرف
+              تقرير حركة الأصناف ({stockMovements.length})
             </button>
-          )}
-          <button
-            onClick={() => setTab('movements')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0 ${
-              tab === 'movements'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600'
-            }`}
-          >
-            تقرير حركة الأصناف ({stockMovements.length})
-          </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* Valuation Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="ui-card p-4">
           <div className="text-xs text-slate-500">إجمالي قيمة المخزون (بسعر الشراء)</div>
           <div className="text-xl font-bold font-mono-num text-slate-900 mt-1">
             {formatMoney(totalCostVal, settings.currency)}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="ui-card p-4">
           <div className="text-xs text-slate-500">القيمة المتوقعة (بسعر البيع)</div>
           <div className="text-xl font-bold font-mono-num text-emerald-700 mt-1">
             {formatMoney(totalRetailVal, settings.currency)}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="ui-card p-4">
           <div className="text-xs text-slate-500">أصناف تحت الحد الأدنى / نافدة</div>
           <div className="text-xl font-bold font-mono-num text-amber-700 mt-1">
             {products.filter((p) => p.stock <= p.minStock).length} صنف
@@ -254,10 +255,7 @@ export const InventoryView: React.FC = () => {
       </div>
 
       {tab === 'stocktake' && canStocktake && (
-        <form
-          onSubmit={handleStockAdjust}
-          className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 max-w-2xl"
-        >
+        <form onSubmit={handleStockAdjust} className="ui-card p-4 sm:p-6 space-y-4 max-w-2xl">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <ClipboardCheck className="w-5 h-5 text-emerald-700" />
             <h2 className="text-base font-bold text-slate-900">
@@ -267,7 +265,7 @@ export const InventoryView: React.FC = () => {
 
           {feedback && (
             <div
-              className={`p-3 rounded-lg text-xs border ${
+              className={`p-3 rounded-xl text-xs border ${
                 feedback.type === 'ok'
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                   : 'bg-red-50 border-red-200 text-red-700'
@@ -278,7 +276,7 @@ export const InventoryView: React.FC = () => {
           )}
 
           {/* Barcode lookup for stocktake */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
             <label className="block text-xs font-semibold text-slate-700">
               مسح باركود الصنف للجرد السريع (بالكاميرا أو قارئ USB/Bluetooth)
             </label>
@@ -295,24 +293,26 @@ export const InventoryView: React.FC = () => {
                   }
                 }}
                 placeholder="امسح أو اكتب الباركود / الكود لتحديد الصنف..."
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg font-mono-num"
+                className="ui-input font-mono-num"
                 dir="ltr"
               />
-              <button
-                type="button"
-                onClick={() => selectProductForStocktakeByCode(stocktakeBarcodeInput)}
-                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0"
-              >
-                تحديد الصنف
-              </button>
-              <button
-                type="button"
-                onClick={() => setCameraOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap shrink-0"
-              >
-                <Camera className="w-4 h-4" />
-                <span>مسح</span>
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => selectProductForStocktakeByCode(stocktakeBarcodeInput)}
+                  className="flex-1 sm:flex-none px-3.5 py-2.5 min-h-[42px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  تحديد الصنف
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCameraOpen(true)}
+                  className="flex-1 sm:flex-none ui-btn-primary text-xs min-h-[42px]"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>مسح</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -331,7 +331,7 @@ export const InventoryView: React.FC = () => {
                     setQtyValue(String(found.stock));
                   }
                 }}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+                className="ui-input"
               >
                 <option value="">-- اختر صنفاً --</option>
                 {products.map((p) => (
@@ -353,7 +353,7 @@ export const InventoryView: React.FC = () => {
                 onChange={(e) =>
                   setAdjustMode(e.target.value as 'stocktake' | 'in' | 'out')
                 }
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+                className="ui-input"
               >
                 <option value="stocktake">جرد فعلي (تحديد الرصيد الفعلي)</option>
                 <option value="in">إضافة وارد للمخزون (+)</option>
@@ -372,12 +372,12 @@ export const InventoryView: React.FC = () => {
                 step="any"
                 value={qtyValue}
                 onChange={(e) => setQtyValue(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono-num"
+                className="ui-input font-mono-num"
               />
             </div>
 
             {selectedProduct && adjustMode === 'stocktake' && qtyValue !== '' && (
-              <div className="sm:col-span-2 p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+              <div className="sm:col-span-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
                 <span>
                   الرصيد المسجل: <strong className="font-mono-num">{selectedProduct.stock}</strong>
                 </span>
@@ -409,7 +409,7 @@ export const InventoryView: React.FC = () => {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="مثال: جرد شهري / بضاعة تالفة / تسوية عجز"
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                className="ui-input"
               />
             </div>
           </div>
@@ -417,7 +417,7 @@ export const InventoryView: React.FC = () => {
           <button
             type="submit"
             disabled={saving}
-            className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl cursor-pointer"
+            className="ui-btn-primary w-full sm:w-auto"
           >
             {saving ? 'جاري التحديث...' : 'اعتماد وحفظ حركة المخزون'}
           </button>
@@ -425,22 +425,22 @@ export const InventoryView: React.FC = () => {
       )}
 
       {tab !== 'stocktake' && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-4">
+        <div className="ui-card p-3.5 sm:p-4 space-y-4">
           <div className="flex flex-wrap items-center gap-2 max-w-xl">
             <div className="relative flex-1 min-w-[220px]">
-              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 placeholder="بحث بالباركود أو كود الصنف أو اسمه..."
-                className="w-full pr-9 pl-3 py-2 text-sm border border-slate-200 rounded-lg"
+                className="ui-input pr-10"
               />
             </div>
             <button
               type="button"
               onClick={() => setCameraOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-lg shrink-0 cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 min-h-[42px] text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-xl shrink-0 cursor-pointer whitespace-nowrap"
             >
               <Camera className="w-4 h-4" />
               <span>مسح باركود</span>
@@ -448,122 +448,207 @@ export const InventoryView: React.FC = () => {
           </div>
 
           {tab === 'levels' ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
-                  <tr>
-                    <th className="text-right py-2.5 px-4 font-semibold">الكود / الباركود</th>
-                    <th className="text-right py-2.5 px-4 font-semibold">الصنف</th>
-                    <th className="text-center py-2.5 px-4 font-semibold">المتوفر</th>
-                    <th className="text-center py-2.5 px-4 font-semibold">الحد الأدنى</th>
-                    <th className="text-left py-2.5 px-4 font-semibold">قيمة المخزون (تكلفة)</th>
-                    <th className="text-right py-2.5 px-4 font-semibold">التنبيه</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredProducts.map((p) => {
-                    const reserved = reservedStockByProductId.get(p.id) || 0;
-                    return (
-                      <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-4 font-mono-num text-slate-700">
-                          <div className="font-semibold text-slate-900">{p.code}</div>
-                          {p.barcode && (
-                            <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 mt-0.5" dir="ltr">
-                              <ScanBarcode className="w-3 h-3 shrink-0" />
-                              <span>{p.barcode}</span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-4 font-medium text-slate-900">{p.name}</td>
-                        <td className="py-2.5 px-4 text-center font-mono-num font-bold">
-                          {formatNumber(p.stock)} {p.unit}
-                          {reserved > 0 && (
-                            <div className="text-[11px] font-normal text-amber-700">
-                              محجوز محلياً: {formatNumber(reserved)}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-4 text-center font-mono-num text-slate-500">
-                          {formatNumber(p.minStock)}
-                        </td>
-                        <td className="py-2.5 px-4 text-left font-mono-num">
-                          {formatMoney(p.stock * p.costPrice, settings.currency)}
-                        </td>
-                        <td className="py-2.5 px-4 text-xs">
-                          {p.stock === 0 ? (
-                            <span className="text-red-700 font-semibold">نفد</span>
-                          ) : p.stock <= p.minStock ? (
-                            <span className="text-amber-700 font-semibold">منخفض</span>
-                          ) : (
-                            <span className="text-emerald-700">جيد</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
-                  <tr>
-                    <th className="text-right py-2.5 px-3 font-semibold">التاريخ</th>
-                    <th className="text-right py-2.5 px-3 font-semibold">الكود / الصنف</th>
-                    <th className="text-right py-2.5 px-3 font-semibold">نوع الحركة</th>
-                    <th className="text-center py-2.5 px-3 font-semibold">التغير</th>
-                    <th className="text-center py-2.5 px-3 font-semibold">قبل ← بعد</th>
-                    <th className="text-right py-2.5 px-3 font-semibold">السبب / المرجع</th>
-                    <th className="text-right py-2.5 px-3 font-semibold">الموظف</th>
-                    <th className="text-right py-2.5 px-3 font-semibold">الجهاز</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredMovements.map((m) => {
-                    const prod = productById.get(m.productId);
-                    return (
-                      <tr key={m.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 text-xs text-slate-500">
-                          {formatDateTime(m.createdAt)}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <div className="font-medium text-slate-900">{m.productName}</div>
-                          <div className="text-xs font-mono-num text-slate-500">
-                            {m.productCode}
-                            {prod?.barcode ? ` · ${prod.barcode}` : ''}
+            <>
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden">
+                {filteredProducts.map((p) => {
+                  const reserved = reservedStockByProductId.get(p.id) || 0;
+                  return (
+                    <div key={p.id} className="p-3.5 space-y-1.5 bg-white">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-bold text-slate-900 text-sm truncate">
+                            {p.name}
                           </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-xs font-medium text-slate-700">
-                          {movementTypeLabel(m.type)}
-                        </td>
-                        <td
-                          className={`py-2.5 px-3 text-center font-mono-num font-bold ${
-                            m.qtyChange > 0
-                              ? 'text-emerald-700'
-                              : m.qtyChange < 0
+                          <div className="text-xs font-mono-num text-slate-500">
+                            {p.code}
+                            {p.barcode ? ` · ${p.barcode}` : ''}
+                          </div>
+                        </div>
+                        <span
+                          className={`text-xs font-semibold shrink-0 ${
+                            p.stock === 0
                               ? 'text-red-700'
-                              : 'text-slate-600'
+                              : p.stock <= p.minStock
+                              ? 'text-amber-700'
+                              : 'text-emerald-700'
                           }`}
                         >
-                          {m.qtyChange > 0 ? `+${m.qtyChange}` : m.qtyChange}
-                        </td>
-                        <td className="py-2.5 px-3 text-center font-mono-num text-xs text-slate-600">
-                          {m.previousStock} ← {m.newStock}
-                        </td>
-                        <td className="py-2.5 px-3 text-xs text-slate-600">{m.reason}</td>
-                        <td className="py-2.5 px-3 text-xs text-slate-700">
-                          {m.employeeName}
-                        </td>
-                        <td className="py-2.5 px-3 text-xs text-slate-500">
-                          {m.deviceName || '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          {p.stock === 0 ? 'نفد' : p.stock <= p.minStock ? 'منخفض' : 'جيد'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 text-xs pt-1">
+                        <span className="font-mono-num font-bold text-slate-900">
+                          المتوفر: {formatNumber(p.stock)} {p.unit}
+                          {reserved > 0 ? ` (محجوز: ${formatNumber(reserved)})` : ''}
+                        </span>
+                        <span className="font-mono-num text-slate-600">
+                          {formatMoney(p.stock * p.costPrice, settings.currency)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50/90 border-b border-slate-200 text-xs text-slate-600">
+                    <tr>
+                      <th className="text-right py-2.5 px-4 font-semibold">الكود / الباركود</th>
+                      <th className="text-right py-2.5 px-4 font-semibold">الصنف</th>
+                      <th className="text-center py-2.5 px-4 font-semibold">المتوفر</th>
+                      <th className="text-center py-2.5 px-4 font-semibold">الحد الأدنى</th>
+                      <th className="text-left py-2.5 px-4 font-semibold">قيمة المخزون (تكلفة)</th>
+                      <th className="text-right py-2.5 px-4 font-semibold">التنبيه</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredProducts.map((p) => {
+                      const reserved = reservedStockByProductId.get(p.id) || 0;
+                      return (
+                        <tr key={p.id} className="hover:bg-slate-50/70">
+                          <td className="py-2.5 px-4 font-mono-num text-slate-700">
+                            <div className="font-semibold text-slate-900">{p.code}</div>
+                            {p.barcode && (
+                              <div
+                                className="inline-flex items-center gap-1 text-[11px] text-emerald-700 mt-0.5"
+                                dir="ltr"
+                              >
+                                <ScanBarcode className="w-3 h-3 shrink-0" />
+                                <span>{p.barcode}</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-4 font-medium text-slate-900">{p.name}</td>
+                          <td className="py-2.5 px-4 text-center font-mono-num font-bold">
+                            {formatNumber(p.stock)} {p.unit}
+                            {reserved > 0 && (
+                              <div className="text-[11px] font-normal text-amber-700">
+                                محجوز محلياً: {formatNumber(reserved)}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-4 text-center font-mono-num text-slate-500">
+                            {formatNumber(p.minStock)}
+                          </td>
+                          <td className="py-2.5 px-4 text-left font-mono-num">
+                            {formatMoney(p.stock * p.costPrice, settings.currency)}
+                          </td>
+                          <td className="py-2.5 px-4 text-xs">
+                            {p.stock === 0 ? (
+                              <span className="text-red-700 font-semibold">نفد</span>
+                            ) : p.stock <= p.minStock ? (
+                              <span className="text-amber-700 font-semibold">منخفض</span>
+                            ) : (
+                              <span className="text-emerald-700 font-medium">جيد</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Mobile Movement Cards */}
+              <div className="md:hidden divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden">
+                {filteredMovements.map((m) => (
+                  <div key={m.id} className="p-3.5 space-y-1.5 bg-white text-xs">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 truncate">{m.productName}</div>
+                        <div className="text-slate-500">
+                          {movementTypeLabel(m.type)} · {m.productCode}
+                        </div>
+                      </div>
+                      <span
+                        className={`font-mono-num font-bold text-sm shrink-0 ${
+                          m.qtyChange > 0
+                            ? 'text-emerald-700'
+                            : m.qtyChange < 0
+                            ? 'text-red-700'
+                            : 'text-slate-600'
+                        }`}
+                      >
+                        {m.qtyChange > 0 ? `+${m.qtyChange}` : m.qtyChange}
+                      </span>
+                    </div>
+                    <div className="text-slate-600">{m.reason}</div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span>
+                        {m.previousStock} ← {m.newStock} · {m.employeeName}
+                      </span>
+                      <span className="font-mono-num">{formatDateTime(m.createdAt)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Movements Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50/90 border-b border-slate-200 text-xs text-slate-600">
+                    <tr>
+                      <th className="text-right py-2.5 px-3 font-semibold">التاريخ</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">الكود / الصنف</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">نوع الحركة</th>
+                      <th className="text-center py-2.5 px-3 font-semibold">التغير</th>
+                      <th className="text-center py-2.5 px-3 font-semibold">قبل ← بعد</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">السبب / المرجع</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">الموظف</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">الجهاز</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredMovements.map((m) => {
+                      const prod = productById.get(m.productId);
+                      return (
+                        <tr key={m.id} className="hover:bg-slate-50/70">
+                          <td className="py-2.5 px-3 text-xs text-slate-500">
+                            {formatDateTime(m.createdAt)}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <div className="font-medium text-slate-900">{m.productName}</div>
+                            <div className="text-xs font-mono-num text-slate-500">
+                              {m.productCode}
+                              {prod?.barcode ? ` · ${prod.barcode}` : ''}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-xs font-medium text-slate-700">
+                            {movementTypeLabel(m.type)}
+                          </td>
+                          <td
+                            className={`py-2.5 px-3 text-center font-mono-num font-bold ${
+                              m.qtyChange > 0
+                                ? 'text-emerald-700'
+                                : m.qtyChange < 0
+                                ? 'text-red-700'
+                                : 'text-slate-600'
+                            }`}
+                          >
+                            {m.qtyChange > 0 ? `+${m.qtyChange}` : m.qtyChange}
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-mono-num text-xs text-slate-600">
+                            {m.previousStock} ← {m.newStock}
+                          </td>
+                          <td className="py-2.5 px-3 text-xs text-slate-600">{m.reason}</td>
+                          <td className="py-2.5 px-3 text-xs text-slate-700">
+                            {m.employeeName}
+                          </td>
+                          <td className="py-2.5 px-3 text-xs text-slate-500">
+                            {m.deviceName || '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -598,4 +683,3 @@ export const InventoryView: React.FC = () => {
     </div>
   );
 };
-

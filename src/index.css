@@ -10,10 +10,20 @@
 
   body {
     overflow-x: hidden;
+    background-color: #f6f8f7;
+    color: #0f172a;
   }
 
   button, a, input, select, textarea {
     touch-action: manipulation;
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: #047857;
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.12);
   }
 
   h1, h2, h3, .font-display {
@@ -28,6 +38,36 @@
 
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .ui-card {
+    @apply bg-white border border-slate-200/85 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.04)];
+  }
+
+  .ui-card-interactive {
+    @apply bg-white border border-slate-200/85 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:border-emerald-300 hover:shadow-[0_4px_12px_rgba(4,120,87,0.07)] transition-all duration-150;
+  }
+
+  .ui-input {
+    @apply w-full px-3.5 py-2.5 min-h-[42px] text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 transition-colors;
+  }
+
+  .ui-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 disabled:bg-slate-300 disabled:text-slate-500 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-[0_1px_2px_rgba(4,120,87,0.18)] transition-colors cursor-pointer whitespace-nowrap shrink-0;
+  }
+
+  .ui-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200/90 text-slate-800 text-xs sm:text-sm font-semibold rounded-xl shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors cursor-pointer whitespace-nowrap shrink-0;
+  }
+
+  .ui-segmented {
+    @apply inline-flex items-center gap-1 p-1 bg-slate-200/75 rounded-xl max-w-full overflow-x-auto;
+  }
+
+  .ui-segmented-btn {
+    @apply px-3.5 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap shrink-0;
   }
 }
 

@@ -105,17 +105,17 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
     : 'جميع العمليات متزامنة بالكامل';
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto no-print">
-      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-3xl overflow-hidden shadow-xl">
+    <div className="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-[1px] flex items-end sm:items-center justify-center p-0 sm:p-4 no-print">
+      <div className="bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl w-full max-w-3xl max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl">
         <ModalSubPageHeader
           title="إدارة المزامنة والعمل دون اتصال"
           subtitle="حفظ فوري في قاعدة البيانات المحلية الدائمة وترحيل دقيق إلى Firebase دون تكرار"
           onBack={requestBack}
         />
 
-        <div className="p-5 space-y-4">
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
           {/* Status Cards Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
             <div
               className={`p-3 rounded-xl border ${
                 syncStatus.isOnline
@@ -135,15 +135,14 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                 {syncStatus.isOnline ? 'متصل بالإنترنت' : 'غير متصل'}
               </div>
               <div className="text-[11px] opacity-80 mt-0.5">
-                وضع النظام:{' '}
                 {syncStatus.systemMode === 'online' ? 'متصل بالسحابة' : 'يعمل دون اتصال'}
               </div>
             </div>
 
-            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/70">
               <div className="flex items-center gap-1.5 font-semibold text-slate-700">
                 <CloudOff className="w-4 h-4 text-amber-700 shrink-0" />
-                <span>العمليات غير المرحّلة</span>
+                <span>غير المرحّلة</span>
               </div>
               <div
                 className={`text-lg font-bold font-mono-num mt-1 ${
@@ -153,11 +152,11 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                 {unsyncedTotal}
               </div>
               <div className="text-[11px] text-slate-500">
-                بانتظار الترحيل: {syncStatus.pendingCount} · تعارض: {syncStatus.conflictCount}
+                انتظار: {syncStatus.pendingCount} · تعارض: {syncStatus.conflictCount}
               </div>
             </div>
 
-            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/70">
               <div className="flex items-center gap-1.5 font-semibold text-slate-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
                 <span>العمليات المرحّلة</span>
@@ -166,14 +165,14 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                 {syncStatus.totalSyncedEver}
               </div>
               <div className="text-[11px] text-slate-500 truncate">
-                سجل محلي محفوظ: {syncStatus.syncedCount}
+                محفوظ محلياً: {syncStatus.syncedCount}
               </div>
             </div>
 
-            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/70">
               <div className="flex items-center gap-1.5 font-semibold text-slate-700">
                 <Clock className="w-4 h-4 text-slate-600 shrink-0" />
-                <span>آخر مزامنة ناجحة</span>
+                <span>آخر مزامنة</span>
               </div>
               <div className="text-xs font-bold font-mono-num text-slate-900 mt-1.5">
                 {syncStatus.lastSuccessfulSyncIso
@@ -188,9 +187,9 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
           </div>
 
           {/* Sync Status Banner + Sync Now Button */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50">
-            <div className="space-y-0.5">
-              <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+            <div className="space-y-0.5 min-w-0">
+              <div className="text-xs font-bold text-slate-900 flex items-center gap-2 flex-wrap">
                 <span>حالة المزامنة:</span>
                 <span
                   className={
@@ -216,7 +215,7 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
               type="button"
               disabled={!syncStatus.isOnline || syncStatus.isSyncing}
               onClick={() => void flushPendingQueue()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 text-white text-xs font-semibold rounded-xl cursor-pointer whitespace-nowrap"
+              className="ui-btn-primary text-xs w-full sm:w-auto"
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${syncStatus.isSyncing ? 'animate-spin' : ''}`}
@@ -226,11 +225,11 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+          <div className="ui-segmented">
             <button
               type="button"
               onClick={() => setTab('pending')}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer ${
+              className={`ui-segmented-btn ${
                 tab === 'pending' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
               }`}
             >
@@ -239,7 +238,7 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
             <button
               type="button"
               onClick={() => setTab('synced')}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer ${
+              className={`ui-segmented-btn ${
                 tab === 'synced' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
               }`}
             >
@@ -276,12 +275,12 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                           </span>
                         </div>
                         <span
-                          className={`font-semibold px-2 py-0.5 rounded-md ${
+                          className={`font-semibold ${
                             op.status === 'conflict'
-                              ? 'bg-red-50 text-red-700'
+                              ? 'text-red-700'
                               : op.status === 'syncing'
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'bg-amber-50 text-amber-800'
+                              ? 'text-blue-700'
+                              : 'text-amber-700'
                           }`}
                         >
                           {op.status === 'conflict'
@@ -312,7 +311,7 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                             onClick={() =>
                               void resolveConflictOperation(op.operationId, 'retry')
                             }
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-700 text-white rounded-lg cursor-pointer"
+                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[36px] bg-emerald-700 text-white rounded-lg cursor-pointer font-semibold"
                           >
                             <RefreshCw className="w-3 h-3" />
                             <span>إعادة المحاولة</span>
@@ -325,7 +324,7 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                             onClick={() =>
                               void resolveConflictOperation(op.operationId, 'apply_delta')
                             }
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-600 text-white rounded-lg cursor-pointer"
+                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[36px] bg-amber-600 text-white rounded-lg cursor-pointer font-semibold"
                           >
                             <span>تطبيق فرق الجرد على الرصيد الحالي</span>
                           </button>
@@ -338,7 +337,7 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                               onClick={() =>
                                 void resolveConflictOperation(op.operationId, 'force_apply')
                               }
-                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 text-white rounded-lg cursor-pointer"
+                              className="inline-flex items-center gap-1 px-3 py-2 min-h-[36px] bg-slate-800 text-white rounded-lg cursor-pointer font-semibold"
                             >
                               <span>اعتماد التعديل المحلي قسراً</span>
                             </button>
@@ -352,14 +351,14 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                                 setConfirmDiscardId(null);
                                 void resolveConflictOperation(op.operationId, 'discard');
                               }}
-                              className="px-2.5 py-1 bg-red-600 text-white rounded-lg font-semibold cursor-pointer"
+                              className="px-3 py-2 min-h-[36px] bg-red-600 text-white rounded-lg font-semibold cursor-pointer"
                             >
                               تأكيد الإلغاء والحذف
                             </button>
                             <button
                               type="button"
                               onClick={() => setConfirmDiscardId(null)}
-                              className="px-2 py-1 border border-slate-200 rounded-lg text-slate-600 cursor-pointer"
+                              className="px-3 py-2 min-h-[36px] border border-slate-200 rounded-lg text-slate-600 cursor-pointer"
                             >
                               تراجع
                             </button>
@@ -368,7 +367,7 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                           <button
                             type="button"
                             onClick={() => setConfirmDiscardId(op.operationId)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-red-700 bg-red-50 border border-red-200 rounded-lg cursor-pointer"
+                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[36px] text-red-700 bg-red-50 border border-red-200 rounded-lg cursor-pointer font-semibold"
                           >
                             <Trash2 className="w-3 h-3" />
                             <span>حذف من الانتظار</span>
@@ -395,7 +394,7 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
                         {op.resolvedReferenceNumber || op.localTempRef}
                       </span>
                     </div>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold">
+                    <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>تمت المزامنة</span>
                     </span>
@@ -410,7 +409,6 @@ export const SyncManagerModal: React.FC<SyncManagerModalProps> = ({ open, onClos
               ))}
             </div>
           )}
-
         </div>
       </div>
     </div>
