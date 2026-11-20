@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Power } from 'lucide-react';
 import type { NavSection } from '../types';
 
 export interface NavEntry {
@@ -134,7 +134,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirmState | null>(
     null
   );
-  const [exitToast, setExitToast] = useState<string | null>(null);
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
 
   const sectionHistoryRef = useRef<NavEntry[]>(sectionHistory);
   sectionHistoryRef.current = sectionHistory;
@@ -145,6 +145,9 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
   const pendingConfirmRef = useRef<PendingConfirmState | null>(pendingConfirm);
   pendingConfirmRef.current = pendingConfirm;
 
+  const exitConfirmOpenRef = useRef<boolean>(exitConfirmOpen);
+  exitConfirmOpenRef.current = exitConfirmOpen;
+
   const sectionGuardsRef = useRef<Partial<Record<NavSection, SectionGuardConfig>>>(
     {}
   );
@@ -154,8 +157,6 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
   const suppressNextPopRef = useRef<number>(0);
   const pendingDeltaRef = useRef<number>(0);
   const flushScheduledRef = useRef<boolean>(false);
-  const lastExitPressAtRef = useRef<number>(0);
-  const exitToastTimerRef = useRef<number | null>(null);
 
   const scheduleHistoryFlush = useCallback(() => {
     if (flushScheduledRef.current) return;
@@ -402,10 +403,24 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
-      const nextHist = [...hist, normalized];
+      if (section === 'dashboard') {
+        const nextHist: NavEntry[] = [{ section: 'dashboard' }];
+        sectionHistoryRef.current = nextHist;
+        setSectionHistory(nextHist);
+        if (hist.length > 1) {
+          popBrowserHistory();
+        }
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        return;
+      }
+
+      // Keep root as dashboard and replace current active tab so Back from any tab returns directly to home
+      const nextHist: NavEntry[] = [{ section: 'dashboard' }, normalized];
       sectionHistoryRef.current = nextHist;
       setSectionHistory(nextHist);
-      pushBrowserHistory();
+      if (hist.length <= 1) {
+        pushBrowserHistory();
+      }
       window.scrollTo({ top: 0, behavior: 'auto' });
     },
     [popBrowserHistory, pushBrowserHistory]
@@ -495,6 +510,8 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
     setOverlays([]);
     pendingConfirmRef.current = null;
     setPendingConfirm(null);
+    exitConfirmOpenRef.current = false;
+    setExitConfirmOpen(false);
     const initial: NavEntry[] = [{ section: 'dashboard' }];
     sectionHistoryRef.current = initial;
     setSectionHistory(initial);
@@ -526,13 +543,14 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
           overlaysRef.current.length > 0 || sectionHistoryRef.current.length > 1;
 
         if (!hasMore) {
-          // Stay safely at root
+          // Stay safely at root and ask user whether to exit the app
           seqRef.current = 0;
           try {
-            window.history.replaceState({ alhussamNav: true, seq: 0 }, '');
+            window.history.pushState({ alhussamNav: true, seq: 0 }, '');
           } catch {
             // ignore
           }
+          setExitConfirmOpen(true);
           return;
         }
 
@@ -612,10 +630,15 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [getDirtyForCurrentSection, getDirtyForTopOverlay]);
 
-  // Handle Escape key for overlays on desktop
+  // Handle Escape key for overlays & dialogs on desktop
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
+      if (exitConfirmOpenRef.current) {
+        e.preventDefault();
+        setExitConfirmOpen(false);
+        return;
+      }
       if (pendingConfirmRef.current) {
         e.preventDefault();
         setPendingConfirm(null);
@@ -633,6 +656,11 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Android Hardware Back Bridge (`window.__ALHUSSAM_ON_ANDROID_BACK__`)
   useEffect(() => {
     window.__ALHUSSAM_ON_ANDROID_BACK__ = () => {
+      if (exitConfirmOpenRef.current) {
+        setExitConfirmOpen(false);
+        return;
+      }
+
       if (pendingConfirmRef.current) {
         setPendingConfirm(null);
         return;
@@ -646,36 +674,27 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
-      // Root screen: require double press within 2.2s to exit Android app
-      const now = Date.now();
-      if (now - lastExitPressAtRef.current <= 2200) {
-        lastExitPressAtRef.current = 0;
-        setExitToast(null);
-        if (window.AndroidNavBridge?.exitApp) {
-          window.AndroidNavBridge.exitApp();
-        }
-        return;
-      }
-
-      lastExitPressAtRef.current = now;
-      const msg = 'اضغط زر الرجوع مرة أخرى للخروج من التطبيق';
-      setExitToast(msg);
-      if (exitToastTimerRef.current !== null) {
-        window.clearTimeout(exitToastTimerRef.current);
-      }
-      exitToastTimerRef.current = window.setTimeout(() => {
-        setExitToast(null);
-        exitToastTimerRef.current = null;
-      }, 2200);
+      // Root screen (home page): show exit confirmation dialog (نعم / لا)
+      setExitConfirmOpen(true);
     };
 
     return () => {
       delete window.__ALHUSSAM_ON_ANDROID_BACK__;
-      if (exitToastTimerRef.current !== null) {
-        window.clearTimeout(exitToastTimerRef.current);
-      }
     };
   }, [goBack]);
+
+  const handleConfirmExitApp = useCallback(() => {
+    setExitConfirmOpen(false);
+    if (window.AndroidNavBridge?.exitApp) {
+      window.AndroidNavBridge.exitApp();
+      return;
+    }
+    try {
+      window.close();
+    } catch {
+      // Ignore browser window.close restrictions
+    }
+  }, []);
 
   const currentEntry = sectionHistory[sectionHistory.length - 1] || {
     section: 'dashboard' as NavSection,
@@ -767,11 +786,45 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
         </div>
       )}
 
-      {/* Double-Back Android Exit Hint Toast */}
-      {exitToast && (
-        <div className="fixed bottom-20 lg:bottom-6 inset-x-0 z-[95] flex justify-center px-4 pointer-events-none no-print">
-          <div className="bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-slate-700">
-            {exitToast}
+      {/* Exit App Confirmation Dialog */}
+      {exitConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-[1px] flex items-center justify-center p-4 no-print"
+          role="alertdialog"
+          aria-modal="true"
+          aria-label="تأكيد إغلاق التطبيق"
+        >
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center shrink-0">
+                <Power className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  إغلاق التطبيق
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  هل تريد اغلاق التطبيق؟
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleConfirmExitApp}
+                className="px-5 py-2.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+              >
+                نعم
+              </button>
+              <button
+                type="button"
+                onClick={() => setExitConfirmOpen(false)}
+                className="px-5 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+              >
+                لا
+              </button>
+            </div>
           </div>
         </div>
       )}

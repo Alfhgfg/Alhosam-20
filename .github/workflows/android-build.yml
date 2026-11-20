@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: android-build-${{ github.ref }}
@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21 (Temurin)
         uses: actions/setup-java@v4
@@ -159,12 +161,153 @@ jobs:
             exit 1
           fi
 
+      - name: Resolve App Version & Version Code
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          node -e '
+            const fs = require("fs");
+            const { execFileSync } = require("child_process");
+
+            const gradle = fs.readFileSync("android/app/build.gradle", "utf8");
+            const nameMatch =
+              gradle.match(/resolvedVersionName\s*=.*?"(\d+\.\d+\.\d+)"/) ||
+              gradle.match(/versionName\s+"(\d+\.\d+\.\d+)"/);
+            const codeMatch =
+              gradle.match(/resolvedVersionCode\s*=.*?"(\d+)"/) ||
+              gradle.match(/versionCode\s+(\d+)/);
+
+            const baseName = nameMatch ? nameMatch[1] : "1.0.0";
+            const baseCode = codeMatch ? parseInt(codeMatch[1], 10) : 1;
+            const [baseMajor, baseMinor, basePatch] = baseName
+              .split(".")
+              .map((n) => parseInt(n, 10));
+
+            const runNumber = parseInt(process.env.GITHUB_RUN_NUMBER || "1", 10);
+            const eventName = process.env.GITHUB_EVENT_NAME || "push";
+            const prNumber = (process.env.PR_NUMBER || "").trim();
+
+            let releases = [];
+            try {
+              const out = execFileSync(
+                "gh",
+                ["release", "list", "--limit", "200", "--json", "tagName,name,isDraft"],
+                { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+              ).trim();
+              if (out) releases = JSON.parse(out);
+            } catch {
+              releases = [];
+            }
+
+            let gitTags = [];
+            try {
+              const rawTags = execFileSync("git", ["tag", "-l", "v*"], {
+                encoding: "utf8",
+                stdio: ["ignore", "pipe", "pipe"],
+              });
+              gitTags = rawTags
+                .split(/\r?\n/)
+                .map((t) => t.trim())
+                .filter(Boolean);
+            } catch {
+              gitTags = [];
+            }
+
+            const existingTagSet = new Set(gitTags);
+            let maxReleaseCode = 0;
+            let maxReleasePatch = -1;
+
+            for (const rel of releases) {
+              if (!rel || rel.isDraft) continue;
+              if (rel.tagName) existingTagSet.add(String(rel.tagName).trim());
+
+              const tagVer = String(rel.tagName || "").match(/^v(\d+)\.(\d+)\.(\d+)/);
+              const nameVer = String(rel.name || "").match(/v(\d+)\.(\d+)\.(\d+)/);
+              const verMatch = tagVer || nameVer;
+              if (verMatch) {
+                const maj = parseInt(verMatch[1], 10);
+                const min = parseInt(verMatch[2], 10);
+                const pat = parseInt(verMatch[3], 10);
+                if (maj === baseMajor && min === baseMinor && pat > maxReleasePatch) {
+                  maxReleasePatch = pat;
+                }
+              }
+
+              const codeInName = String(rel.name || "").match(/(?:Code|code|build)\s*[:#-]?\s*(\d+)/);
+              const codeInTag = String(rel.tagName || "").match(/code(\d+)/i);
+              const parsedCode = codeInName
+                ? parseInt(codeInName[1], 10)
+                : codeInTag
+                ? parseInt(codeInTag[1], 10)
+                : 0;
+              if (parsedCode > maxReleaseCode) {
+                maxReleaseCode = parsedCode;
+              }
+            }
+
+            for (const tag of gitTags) {
+              const m = tag.match(/^v(\d+)\.(\d+)\.(\d+)/);
+              if (m) {
+                const maj = parseInt(m[1], 10);
+                const min = parseInt(m[2], 10);
+                const pat = parseInt(m[3], 10);
+                if (maj === baseMajor && min === baseMinor && pat > maxReleasePatch) {
+                  maxReleasePatch = pat;
+                }
+              }
+            }
+
+            let nextPatch = Math.max(basePatch, maxReleasePatch) + 1;
+            let versionName = `${baseMajor}.${baseMinor}.${nextPatch}`;
+            while (existingTagSet.has(`v${versionName}`)) {
+              nextPatch += 1;
+              versionName = `${baseMajor}.${baseMinor}.${nextPatch}`;
+            }
+
+            if (eventName === "pull_request" && prNumber) {
+              versionName = `${versionName}-pr.${prNumber}`;
+            }
+
+            const versionCode = Math.max(
+              baseCode + 1,
+              maxReleaseCode + 1,
+              runNumber + 1
+            );
+
+            const releaseTag = `v${versionName}`;
+            const apkFilename = `alhussam-grocery-v${versionName}-code${versionCode}.apk`;
+            const aabFilename = `alhussam-grocery-v${versionName}-code${versionCode}.aab`;
+
+            const envOut = [
+              `ANDROID_VERSION_NAME=${versionName}`,
+              `ANDROID_VERSION_CODE=${versionCode}`,
+              `RELEASE_TAG=${releaseTag}`,
+              `APK_FILENAME=${apkFilename}`,
+              `AAB_FILENAME=${aabFilename}`,
+            ].join("\n") + "\n";
+
+            fs.appendFileSync(process.env.GITHUB_ENV, envOut);
+            console.log("Resolved Android release version:", {
+              versionName,
+              versionCode,
+              releaseTag,
+              apkFilename,
+              aabFilename,
+            });
+          '
+
       - name: Build APK & AAB via Gradle
         shell: bash
         working-directory: android
         run: |
           set -o pipefail
-          ./gradlew assembleRelease bundleRelease --no-daemon --max-workers=1 --stacktrace 2>&1 | tee "${{ runner.temp }}/gradle-build.log"
+          ./gradlew assembleRelease bundleRelease \
+            -PandroidVersionCode="$ANDROID_VERSION_CODE" \
+            -PandroidVersionName="$ANDROID_VERSION_NAME" \
+            --no-daemon --max-workers=1 --stacktrace 2>&1 | tee "${{ runner.temp }}/gradle-build.log"
 
       - name: Diagnose Gradle failure on error
         if: failure()
@@ -175,7 +318,7 @@ jobs:
             tail -n 120 "${{ runner.temp }}/gradle-build.log"
           fi
 
-      - name: Verify APK, AAB & APK Signature
+      - name: Verify APK, AAB, Version & Release Signature
         shell: bash
         run: |
           set -euo pipefail
@@ -206,11 +349,35 @@ jobs:
             exit 1
           fi
 
-          "$APKSIGNER" verify --verbose --print-certs "$APK_FILE"
+          SIGN_OUTPUT=$("$APKSIGNER" verify --verbose --print-certs "$APK_FILE")
+          printf '%s\n' "$SIGN_OUTPUT"
+          if printf '%s' "$SIGN_OUTPUT" | grep -qi "CN=Android Debug"; then
+            echo "::error::APK was signed with a debug certificate instead of the release keystore."
+            exit 1
+          fi
+
+          AAPT2=$(find "$SDK_DIR/build-tools" -name aapt2 | sort -V | tail -n 1)
+          if [ -n "$AAPT2" ]; then
+            BADGING=$("$AAPT2" dump badging "$APK_FILE" | head -n 5)
+            printf '%s\n' "$BADGING"
+            if ! printf '%s' "$BADGING" | grep -q "name='com.alhussam.grocery'"; then
+              echo "::error::APK package name mismatch."
+              exit 1
+            fi
+            if ! printf '%s' "$BADGING" | grep -q "versionCode='${ANDROID_VERSION_CODE}'"; then
+              echo "::error::APK versionCode does not match ${ANDROID_VERSION_CODE}."
+              exit 1
+            fi
+            if ! printf '%s' "$BADGING" | grep -q "versionName='${ANDROID_VERSION_NAME}'"; then
+              echo "::error::APK versionName does not match ${ANDROID_VERSION_NAME}."
+              exit 1
+            fi
+          fi
+
           jarsigner -verify "$AAB_FILE"
 
-          cp "$APK_FILE" release-artifacts/app-release.apk
-          cp "$AAB_FILE" release-artifacts/app-release.aab
+          cp "$APK_FILE" "release-artifacts/${APK_FILENAME}"
+          cp "$AAB_FILE" "release-artifacts/${AAB_FILENAME}"
           ls -lh release-artifacts/
 
       - name: Upload Gradle failure log
@@ -222,12 +389,54 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Upload APK & AAB Artifacts
+      - name: Upload Standalone APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: alhussam-grocery-android-release
-          path: |
-            release-artifacts/app-release.apk
-            release-artifacts/app-release.aab
+          name: alhussam-grocery-v${{ env.ANDROID_VERSION_NAME }}-code${{ env.ANDROID_VERSION_CODE }}-apk
+          path: release-artifacts/${{ env.APK_FILENAME }}
+          compression-level: 6
           if-no-files-found: error
           retention-days: 30
+
+      - name: Upload Standalone AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: alhussam-grocery-v${{ env.ANDROID_VERSION_NAME }}-code${{ env.ANDROID_VERSION_CODE }}-aab
+          path: release-artifacts/${{ env.AAB_FILENAME }}
+          compression-level: 6
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release with Separate APK & AAB
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node -e '
+            const fs = require("fs");
+            const vName = process.env.ANDROID_VERSION_NAME;
+            const vCode = process.env.ANDROID_VERSION_CODE;
+            const apk = process.env.APK_FILENAME;
+            const aab = process.env.AAB_FILENAME;
+            const notes = [
+              `## بقالة الحسام - الإصدار v${vName} (Code ${vCode})`,
+              "",
+              `- **رقم الإصدار (Version Name):** \`${vName}\``,
+              `- **رمز الإصدار (Version Code):** \`${vCode}\``,
+              `- **معرف الحزمة (Package ID):** \`com.alhussam.grocery\``,
+              "",
+              "### الملفات المرفقة",
+              `1. **\`${apk}\`**: ملف APK مستقل وموقّع بمفتاح الإصدار الرسمي؛ عند تحميله على هاتف أندرويد يُفتح ويُثبَّت مباشرة كتحديث فوق النسخة المثبتة دون حذفها أو فقدان البيانات.`,
+              `2. **\`${aab}\`**: ملف AAB مستقل للنشر على Google Play.`,
+            ].join("\n");
+            fs.writeFileSync(process.argv[1], notes, "utf8");
+          ' "${{ runner.temp }}/release-notes.md"
+
+          gh release create "$RELEASE_TAG" \
+            "release-artifacts/${APK_FILENAME}" \
+            "release-artifacts/${AAB_FILENAME}" \
+            --target "$GITHUB_SHA" \
+            --title "بقالة الحسام v${ANDROID_VERSION_NAME} (Code ${ANDROID_VERSION_CODE})" \
+            --notes-file "${{ runner.temp }}/release-notes.md"
